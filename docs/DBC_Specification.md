@@ -22,7 +22,7 @@ MultiplexerIdentifier: Signal definition is only used if the value of the multip
 
 ## CM_
 Description field.
-Format: `CM_ [<BO_|SG_> <CAN-ID> [SignalName]] "<DescriptionText>";`
+Format: `CM_ [<BU_|BO_|SG_> [CAN-ID] [SignalName]] "<DescriptionText>";`
 
 # Sources
 http://pisnoop.s3.amazonaws.com/snoop_help_dbc.htm
