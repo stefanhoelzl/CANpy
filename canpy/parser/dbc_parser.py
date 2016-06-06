@@ -88,7 +88,7 @@ class DBCParser(object):
         """
         reg = re.search('BO_\s*(?P<can_id>\d+)\s*(?P<name>\S+)\s*:\s*(?P<length>\d+)\s*(?P<sender>\S+)', message_str)
         message = CANMessage(int(reg.group('can_id')), reg.group('name').strip(), int(reg.group('length')))
-        self._canbus.get_node(reg.group('sender').strip()).add_message(message)
+        self._canbus.nodes[reg.group('sender').strip()].add_message(message)
         self._mode = ('MESSAGE', message)
 
     def _parse_signal(self, signal_str):
@@ -119,7 +119,7 @@ class DBCParser(object):
                            value_min=float(reg.group('min_value')), value_max=float(reg.group('max_value')),
                            unit=reg.group('unit').strip(), is_multiplexer=is_multiplexer, multiplexer_id=multiplexer_id)
         for node_name in receivers:
-            node = self._canbus.get_node(node_name)
+            node = self._canbus.nodes[node_name]
             signal.add_receiver(node)
         self._mode[1].add_signal(signal)
 
@@ -137,7 +137,7 @@ class DBCParser(object):
 
         desc_item = None
         if reg.group('node'):
-            desc_item = self._canbus.get_node(reg.group('name').strip())
+            desc_item = self._canbus.nodes[reg.group('name').strip()]
         elif reg.group('msg'):
             desc_item = self._canbus.get_message(int(reg.group('can_id')))
         elif reg.group('sig'):

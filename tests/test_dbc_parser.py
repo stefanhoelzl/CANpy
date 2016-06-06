@@ -29,7 +29,7 @@ class TestDBCParsing(object):
         parser = DBCParser()
         parser._parse_line(line)
         assert len(parser._canbus.nodes) == 3
-        node_names = list(map(lambda n: n.name, parser._canbus.nodes))
+        node_names = parser._canbus._nodes.keys()
         assert "Node0" in node_names
         assert "Node1" in node_names
         assert "Node2" in node_names
@@ -40,7 +40,7 @@ class TestDBCParsing(object):
         sender = CANNode('Node0')
         parser._canbus.add_node(sender)
         parser._parse_line(line)
-        msg = parser._canbus.nodes[0].messages[0]
+        msg = parser._canbus.nodes['Node0'].messages[0]
         assert msg.name == 'CANMessage'
         assert msg.can_id == 1234
         assert msg.length == 8
@@ -134,7 +134,7 @@ class TestDBCParsing(object):
         parser = DBCParser()
         parser._canbus.add_node(CANNode('Node0'))
         parser._parse_line(testset_desc_node[0])
-        assert parser._canbus.nodes[0].description == "The Description"
+        assert parser._canbus.nodes['Node0'].description == "The Description"
 
     def test_parse_message_desc(self):
         parser = DBCParser()
@@ -142,7 +142,7 @@ class TestDBCParsing(object):
         node.add_message(CANMessage(1234, 'CANMessage', 8))
         parser._canbus.add_node(node)
         parser._parse_line(testset_desc_message[0])
-        assert parser._canbus.nodes[0].messages[0].description == "The Description"
+        assert parser._canbus.nodes['Node0'].messages[0].description == "The Description"
 
     def test_parse_signal_desc(self):
         parser = DBCParser()

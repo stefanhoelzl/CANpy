@@ -14,32 +14,15 @@ class TestCANBus(object):
         cdb = CANBus()
         node = CANNode('TestNode')
         cdb.add_node(node)
-        assert cdb.get_node('TestNode') == node
+        assert cdb.nodes['TestNode'] == node
 
-    def test_get_message_by_can_id(self):
+    def test_get_message(self):
         cdb = CANBus()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)
         cdb.add_node(node)
         assert cdb.get_message(can_id=1234) == msg
-
-    def test_get_message_by_name(self):
-        cdb = CANBus()
-        node = CANNode('TestNode')
-        msg = CANMessage(1234, 'Message', 8)
-        node.add_message(msg)
-        cdb.add_node(node)
-        assert cdb.get_message(name='Message') == msg
-
-    def test_get_message_no_parameter(self):
-        cdb = CANBus()
-        node = CANNode('TestNode')
-        msg = CANMessage(1234, 'Message', 8)
-        node.add_message(msg)
-        cdb.add_node(node)
-        with pytest.raises(AttributeError):
-            cdb.get_message()
 
     def test_get_signal_by_name(self):
         cdb = CANBus()

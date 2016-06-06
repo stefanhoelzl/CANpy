@@ -5,7 +5,7 @@ class CANBus(object):
     """Representation of a CAN-Bus"""
     def __init__(self):
         """Initializes the object"""
-        self._nodes = []
+        self._nodes = {}
 
         self.version = ""
         self.description = ""
@@ -22,36 +22,17 @@ class CANBus(object):
         Args:
             node: Node to add.
         """
-        self._nodes.append(node)
+        self._nodes[node.name] = node
 
-    def get_node(self, name):
-        """Returns node by name
-
-        Args:
-            name: Node name
-        Returns:
-            node with the given name
-        """
-        return [node for node in self._nodes if node.name == name][0]
-
-    def get_message(self, can_id=None, name=None):
-        """Returns message by can_id or name
+    def get_message(self, can_id):
+        """Returns message by can_id
 
         Args:
             can_id: Message CAN-ID
-            name:   Message name
-        Raises:
-            AttributeError: If weather can_id or name is given
         Returns:
-            message with the given can-id or name
+            message with the given can-id
         """
-        if can_id == None and name == None:
-            raise AttributeError('Either name or can_id attribute must be given')
-        if can_id:
-            return [msg for node in self.nodes for msg in node.messages if msg.can_id == can_id][0]
-        elif name:
-            return [msg for node in self.nodes for msg in node.messages if msg.name == name][0]
-        return None
+        return [msg for node in self.nodes.values() for msg in node.messages if msg.can_id == can_id][0]
 
     def get_signal(self, can_id, name):
         """Returns signal by name and can_id
@@ -62,9 +43,7 @@ class CANBus(object):
         Returns:
             signal with the given name and CAN-ID
         """
-        return [sig for node in self.nodes
-                        for msg in node.messages if msg.can_id == can_id
-                            for sig in msg.signals if sig.name == name][0]
+        return [sig for sig in self.get_message(can_id).signals if sig.name == name][0]
 
     # Protocol definitions
     def __str__(self, *args, **kwargs):
