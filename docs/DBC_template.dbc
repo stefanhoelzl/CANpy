@@ -11,7 +11,8 @@ BO_ 4321 CANMultiplexed: 2 Node0
     SG_ Value0 m0 : 8|8@1+ (1,0) [0|0] "" Node1
     SG_ Value1 m1 : 8|8@1+ (1,0) [0|0] "" Node1
 
-CM_ "DBC Template";
+CM_ "DBC Template
+with multiline description";
 CM_ BU_ Node0 "The 0th Node";
 CM_ BO_ 4321 "Multiplexed CAN-Message";
 CM_ SG_ 1234 Signal0 "First signal in this message";

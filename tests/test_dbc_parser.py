@@ -130,13 +130,13 @@ class TestDBCParsing(object):
         parser._parse_line(testset_desc_candb[0])
         assert parser._canbus.description == "The Description"
 
-    def test_parse_candb_node(self):
+    def test_parse_node_desc(self):
         parser = DBCParser()
         parser._canbus.add_node(CANNode('Node0'))
         parser._parse_line(testset_desc_node[0])
         assert parser._canbus.nodes[0].description == "The Description"
 
-    def test_parse_candb_message(self):
+    def test_parse_message_desc(self):
         parser = DBCParser()
         node = CANNode('Node0')
         node.add_message(CANMessage(1234, 'CANMessage', 8))
@@ -144,7 +144,7 @@ class TestDBCParsing(object):
         parser._parse_line(testset_desc_message[0])
         assert parser._canbus.nodes[0].messages[0].description == "The Description"
 
-    def test_parse_candb_signal(self):
+    def test_parse_signal_desc(self):
         parser = DBCParser()
         node = CANNode('Node0')
         msg = CANMessage(1234, 'CANMessage', 8)
@@ -154,6 +154,13 @@ class TestDBCParsing(object):
         parser._canbus.add_node(node)
         parser._parse_line(testset_desc_signal[0])
         assert sig.description == "The Description"
+
+    def test_parse_multiline_desc(self):
+        parser = DBCParser()
+        lines = ['CM_ " Line 1\t\n', 'Line2\n', 'Line3  ";']
+        for line in lines:
+            parser._parse_line(line)
+        assert parser._canbus.description == ' Line 1\t\nLine2\nLine3  '
 
 def test_whole_dbc():
     parser = DBCParser()

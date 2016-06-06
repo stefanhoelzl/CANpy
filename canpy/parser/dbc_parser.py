@@ -20,6 +20,7 @@ class DBCParser(object):
                           'SG_':     self._parse_signal,
                           'CM_':     self._parse_description
                          }
+        self._force_parser = False
 
     # Method definitions
     def parse_file(self, file_name):
@@ -44,10 +45,12 @@ class DBCParser(object):
         Raises:
             RuntimeError: If signal description is not in a message block
         """
-
-        for key, parse_function in self._keywords.items():
-            if line.startswith(key):
-                parse_function(line)
+        if self._force_parser:
+            self._force_parser(line)
+        else:
+            for key, parse_function in self._keywords.items():
+                if line.startswith(key):
+                    parse_function(line)
 
     def _parse_version(self, version_str):
         """Parses a version string
@@ -129,20 +132,32 @@ class DBCParser(object):
             Namedtuple with value, type and identifier of the description
         """
         pattern  = 'CM_\s*(?P<node>BU_)?\s*(?P<msg>BO_)?\s*(?P<sig>SG_)?\s*'
-        pattern += '(?P<can_id>\d*)?\s*(?P<name>\S*)?\s*"(?P<value>.+)";'
+        pattern += '(?P<can_id>\d*)?\s*(?P<name>\S*)?\s*"(?P<value>.+)'
         reg = re.search(pattern, desc_str)
 
-        desc_type = 'CANDB'
-        desc_id = None
+        desc_item = None
         if reg.group('node'):
-            self._canbus.get_node(reg.group('name').strip()).description = reg.group('value')
+            desc_item = self._canbus.get_node(reg.group('name').strip())
         elif reg.group('msg'):
-            self._canbus.get_message(int(reg.group('can_id'))).description = reg.group('value')
+            desc_item = self._canbus.get_message(int(reg.group('can_id')))
         elif reg.group('sig'):
-            self._canbus.get_signal(can_id=int(reg.group('can_id')), name=reg.group('name').strip()).description = reg.group('value')
+            desc_item = self._canbus.get_signal(can_id=int(reg.group('can_id')), name=reg.group('name').strip())
         else:
-            self._canbus.description = reg.group('value')
+            desc_item = self._canbus
 
-        self._mode = ('NORMAL', None)
+        value = reg.group('value')
 
+        if value.strip()[-2:] == '";':
+            desc_item.description = value.replace('";', '')
+            self._mode = ('NORMAL', None)
+        else:
+            self._force_parser = self._parse_multiline_description
+            self._mode = ('MULTILINE_DESCRIPTION', (desc_item, value + '\n'))
 
+    def _parse_multiline_description(self, line):
+        if line.strip()[-2:] == '";':
+            self._mode[1][0].description = self._mode[1][1] + line.replace('";', '')
+            self._force_parser = False
+            self._mode = ('NORMAL', None)
+        else:
+            self._mode = (self._mode[0], (self._mode[1][0], self._mode[1][1] + line))
