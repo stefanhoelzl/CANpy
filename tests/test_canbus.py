@@ -24,7 +24,11 @@ class TestCANBus(object):
         cdb.add_node(node)
         assert cdb.get_message(can_id=1234) == msg
 
-    def test_get_signal_by_name(self):
+    def test_get_none_message(self):
+        cdb = CANBus()
+        assert cdb.get_message(can_id=1234) == None
+
+    def test_get_signal(self):
         cdb = CANBus()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
@@ -33,6 +37,10 @@ class TestCANBus(object):
         msg.add_signal(sig)
         cdb.add_node(node)
         assert cdb.get_signal(can_id=1234, name='Signal') == sig
+
+    def test_get_none_signal(self):
+        cdb = CANBus()
+        assert cdb.get_signal(can_id=1234, name='Signal') == None
 
 
 class TestCANNode(object):
@@ -44,7 +52,7 @@ class TestCANNode(object):
     def test_set_message_sender(self):
         node = CANNode('TestNode')
         node.add_message(CANMessage(1, 'Name', 8))
-        assert node.messages[0].sender == node
+        assert node.messages[1].sender == node
 
     def test_add_message_with_sender(self):
         msg = CANMessage(1, 'Name', 8)

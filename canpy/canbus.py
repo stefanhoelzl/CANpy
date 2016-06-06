@@ -30,9 +30,12 @@ class CANBus(object):
         Args:
             can_id: Message CAN-ID
         Returns:
-            message with the given can-id
+            message with the given can-id or None
         """
-        return [msg for node in self.nodes.values() for msg in node.messages if msg.can_id == can_id][0]
+        messages = [msg for node in self.nodes.values() for msg in node.messages.values() if msg.can_id == can_id]
+        if len(messages) == 0:
+            return None
+        return messages[0]
 
     def get_signal(self, can_id, name):
         """Returns signal by name and can_id
@@ -41,9 +44,15 @@ class CANBus(object):
             can_id: CAN-ID of the message which contains the signal
             name:   Signal name
         Returns:
-            signal with the given name and CAN-ID
+            signal with the given name and CAN-ID or None
         """
-        return [sig for sig in self.get_message(can_id).signals if sig.name == name][0]
+        message = self.get_message(can_id)
+        if not message:
+            return None
+        signals = [sig for sig in message.signals.values() if sig.name == name]
+        if len(signals) == 0:
+            return None
+        return signals[0]
 
     # Protocol definitions
     def __str__(self, *args, **kwargs):
@@ -58,7 +67,7 @@ class CANNode(object):
         Args:
             name: Name of the Node
         """
-        self._messages = []
+        self._messages = {}
 
         self.name = name
         self.description = ""
@@ -81,7 +90,7 @@ class CANNode(object):
             raise RuntimeError('Message already belongs to node {}!'.format(message.sender))
 
         message.sender = self
-        self._messages.append(message)
+        self._messages[message.can_id] = message
 
     # Protocol definitions
     def __str__(self, *args, **kwargs):
@@ -97,7 +106,7 @@ class CANMessage(object):
             name:   Name of the message.
             length: Message length in bytes
         """
-        self._signals = []
+        self._signals = {}
 
         self.can_id = can_id
         self.name = name
@@ -121,7 +130,7 @@ class CANMessage(object):
         """
         if signal.message:
             raise RuntimeError('Signal already belongs to message {}'.format(signal.message))
-        self._signals.append(signal)
+        self._signals[signal.name] = signal
 
     # Protocol definitions
     def __str__(self, *args, **kwargs):

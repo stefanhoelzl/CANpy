@@ -40,7 +40,7 @@ class TestDBCParsing(object):
         sender = CANNode('Node0')
         parser._canbus.add_node(sender)
         parser._parse_line(line)
-        msg = parser._canbus.nodes['Node0'].messages[0]
+        msg = parser._canbus.nodes['Node0'].messages[1234]
         assert msg.name == 'CANMessage'
         assert msg.can_id == 1234
         assert msg.length == 8
@@ -59,7 +59,7 @@ class TestDBCParsing(object):
         node0.add_message(msg)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
-        sig = msg.signals[0]
+        sig = msg.signals['Signal1']
         assert sig.name == 'Signal1'
         assert sig.start_bit == 32
         assert sig.length == 32
@@ -89,7 +89,7 @@ class TestDBCParsing(object):
         node0.add_message(msg)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line('SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node0')
-        sig = msg.signals[0]
+        sig = msg.signals['Signal0']
         assert sig.signed == True
         assert sig.unit == ""
 
@@ -105,7 +105,7 @@ class TestDBCParsing(object):
         parser._canbus.add_node(node2)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
-        sig = msg.signals[0]
+        sig = msg.signals['Signal1']
         assert sig.is_multiplexer == True
         assert sig.multiplexer_id == None
 
@@ -121,7 +121,7 @@ class TestDBCParsing(object):
         parser._canbus.add_node(node2)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
-        sig = msg.signals[0]
+        sig = msg.signals['Signal1']
         assert sig.is_multiplexer == False
         assert sig.multiplexer_id == 34
 
@@ -142,7 +142,7 @@ class TestDBCParsing(object):
         node.add_message(CANMessage(1234, 'CANMessage', 8))
         parser._canbus.add_node(node)
         parser._parse_line(testset_desc_message[0])
-        assert parser._canbus.nodes['Node0'].messages[0].description == "The Description"
+        assert parser._canbus.nodes['Node0'].messages[1234].description == "The Description"
 
     def test_parse_signal_desc(self):
         parser = DBCParser()
