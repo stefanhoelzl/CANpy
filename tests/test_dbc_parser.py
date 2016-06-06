@@ -2,7 +2,7 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.candb import CANNode, CANMessage, CANSignal
+from canpy.canbus import CANNode, CANMessage, CANSignal
 from canpy.parser.dbc import DBCParser
 
 testset_nodes = ['BU_   :   Node0   Node1    Node2', 'BU_:Node0 Node1 Node2']
@@ -22,14 +22,14 @@ class TestDBCParseLine(object):
     def test_parse_verison(self, line):
         parser = DBCParser()
         parser._parse_line(line)
-        assert parser._candb.version == "1.0"
+        assert parser._canbus.version == "1.0"
 
     @pytest.mark.parametrize("line", testset_nodes)
     def test_parse_nodes(self, line):
         parser = DBCParser()
         parser._parse_line(line)
-        assert len(parser._candb.nodes) == 3
-        node_names = list(map(lambda n: n.name, parser._candb.nodes))
+        assert len(parser._canbus.nodes) == 3
+        node_names = list(map(lambda n: n.name, parser._canbus.nodes))
         assert "Node0" in node_names
         assert "Node1" in node_names
         assert "Node2" in node_names
@@ -38,9 +38,9 @@ class TestDBCParseLine(object):
     def test_parse_message(self, line):
         parser = DBCParser()
         sender = CANNode('Node0')
-        parser._candb.add_node(sender)
+        parser._canbus.add_node(sender)
         parser._parse_line(line)
-        msg = parser._candb.nodes[0].messages[0]
+        msg = parser._canbus.nodes[0].messages[0]
         assert msg.name == 'CANMessage'
         assert msg.can_id == 1234
         assert msg.length == 8
@@ -50,11 +50,11 @@ class TestDBCParseLine(object):
     def test_parse_signal(self, line):
         parser = DBCParser()
         node0 = CANNode('Node0')
-        parser._candb.add_node(node0)
+        parser._canbus.add_node(node0)
         node1 = CANNode('Node1')
-        parser._candb.add_node(node1)
+        parser._canbus.add_node(node1)
         node2 = CANNode('Node2')
-        parser._candb.add_node(node2)
+        parser._canbus.add_node(node2)
         msg = CANMessage(1, 'CANMessage', 8)
         node0.add_message(msg)
         parser._mode = ('MESSAGE', msg)
@@ -88,9 +88,9 @@ class TestDBCParseLine(object):
         msg = CANMessage(1, 'CANMessage', 8)
         node0.add_message(msg)
         node1 = CANNode('Node1')
-        parser._candb.add_node(node1)
+        parser._canbus.add_node(node1)
         node2 = CANNode('Node2')
-        parser._candb.add_node(node2)
+        parser._canbus.add_node(node2)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
         sig = msg.signals[0]
@@ -104,9 +104,9 @@ class TestDBCParseLine(object):
         msg = CANMessage(1, 'CANMessage', 8)
         node0.add_message(msg)
         node1 = CANNode('Node1')
-        parser._candb.add_node(node1)
+        parser._canbus.add_node(node1)
         node2 = CANNode('Node2')
-        parser._candb.add_node(node2)
+        parser._canbus.add_node(node2)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
         sig = msg.signals[0]
@@ -116,21 +116,21 @@ class TestDBCParseLine(object):
     def test_parse_candb_desc(self):
         parser = DBCParser()
         parser._parse_line(testset_desc_candb[0])
-        assert parser._candb.description == "The Description"
+        assert parser._canbus.description == "The Description"
 
     def test_parse_candb_node(self):
         parser = DBCParser()
-        parser._candb.add_node(CANNode('Node0'))
+        parser._canbus.add_node(CANNode('Node0'))
         parser._parse_line(testset_desc_node[0])
-        assert parser._candb.nodes[0].description == "The Description"
+        assert parser._canbus.nodes[0].description == "The Description"
 
     def test_parse_candb_message(self):
         parser = DBCParser()
         node = CANNode('Node0')
         node.add_message(CANMessage(1234, 'CANMessage', 8))
-        parser._candb.add_node(node)
+        parser._canbus.add_node(node)
         parser._parse_line(testset_desc_message[0])
-        assert parser._candb.nodes[0].messages[0].description == "The Description"
+        assert parser._canbus.nodes[0].messages[0].description == "The Description"
 
     def test_parse_candb_signal(self):
         parser = DBCParser()
@@ -139,7 +139,7 @@ class TestDBCParseLine(object):
         sig = CANSignal('Signal0', 0, 8)
         msg.add_signal(sig)
         node.add_message(msg)
-        parser._candb.add_node(node)
+        parser._canbus.add_node(node)
         parser._parse_line(testset_desc_signal[0])
         assert sig.description == "The Description"
 

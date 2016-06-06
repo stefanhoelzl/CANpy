@@ -2,22 +2,22 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.candb import CANDB, CANMessage, CANNode, CANSignal
+from canpy.canbus import CANBus, CANMessage, CANNode, CANSignal
 
-class TestCANDB(object):
+class TestCANBus(object):
     def test_add_node(self):
-        cdb = CANDB()
+        cdb = CANBus()
         cdb.add_node(CANNode('TestNode'))
         assert len(cdb.nodes) == 1
 
     def test_get_node(self):
-        cdb = CANDB()
+        cdb = CANBus()
         node = CANNode('TestNode')
         cdb.add_node(node)
         assert cdb.get_node('TestNode') == node
 
     def test_get_message_by_can_id(self):
-        cdb = CANDB()
+        cdb = CANBus()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)
@@ -25,7 +25,7 @@ class TestCANDB(object):
         assert cdb.get_message(can_id=1234) == msg
 
     def test_get_message_by_name(self):
-        cdb = CANDB()
+        cdb = CANBus()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)
@@ -33,7 +33,7 @@ class TestCANDB(object):
         assert cdb.get_message(name='Message') == msg
 
     def test_get_message_no_parameter(self):
-        cdb = CANDB()
+        cdb = CANBus()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)
@@ -42,7 +42,7 @@ class TestCANDB(object):
             cdb.get_message()
 
     def test_get_signal_by_name(self):
-        cdb = CANDB()
+        cdb = CANBus()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)

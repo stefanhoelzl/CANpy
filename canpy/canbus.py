@@ -1,7 +1,7 @@
 __author__ = "Stefan Hölzl"
 
 
-class CANDB(object):
+class CANBus(object):
     """Representation of a CAN-Bus"""
     def __init__(self):
         """Initializes the object"""

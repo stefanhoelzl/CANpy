@@ -3,7 +3,7 @@ __author__ = "Stefan Hölzl"
 import re
 import collections
 
-from canpy.candb import CANDB, CANNode, CANMessage, CANSignal
+from canpy.canbus import CANBus, CANNode, CANMessage, CANSignal
 
 
 class DBCParser(object):
@@ -12,7 +12,7 @@ class DBCParser(object):
     def __init__(self):
         """Initializes the object"""
         self._mode = ('NORMAL', None)
-        self._candb = CANDB()
+        self._canbus = CANBus()
 
     # Method definitions
     def parse_file(self, file_name):
@@ -23,11 +23,11 @@ class DBCParser(object):
         Returns:
             CANDB object
         """
-        self._candb = CANDB()
+        self._canbus = CANBus()
         with open(file_name, 'r') as dbc_fh:
             for line in dbc_fh:
                 self._parse_line(line.strip())
-        return self._candb
+        return self._canbus
 
     def _parse_line(self, line):
         """Parses one line of a dbc file and updates the CANDB
@@ -38,17 +38,17 @@ class DBCParser(object):
             RuntimeError: If signal description is not in a message block
         """
         if line[:7] == 'VERSION':
-            self._candb .version = DBCParser._parse_version(line)
+            self._canbus .version = DBCParser._parse_version(line)
             self._mode = ('NORMAL', None)
         elif line[:3] == 'BU_':
             node_names = DBCParser._parse_nodes(line)
             for node_name in node_names:
-                self._candb.add_node(CANNode(node_name))
+                self._canbus.add_node(CANNode(node_name))
             self._mode = ('NORMAL', None)
         elif line[:3] == 'BO_':
             md = DBCParser._parse_message(line)
             message = CANMessage(md.can_id, md.name, md.length)
-            self._candb.get_node(md.sender).add_message(message)
+            self._canbus.get_node(md.sender).add_message(message)
             self._mode = ('MESSAGE', message)
         elif line[:3] == 'SG_':
             if self._mode[0] != 'MESSAGE':
@@ -59,19 +59,19 @@ class DBCParser(object):
                                value_max=sd.max_value, unit=sd.unit,
                                is_multiplexer=sd.is_multiplexer, multiplexer_id=sd.multiplexer_id)
             for node_name in sd.receivers:
-                node = self._candb.get_node(node_name)
+                node = self._canbus.get_node(node_name)
                 signal.add_receiver(node)
             self._mode[1].add_signal(signal)
         elif line[:3] == 'CM_':
             dc = DBCParser._parse_description(line)
             if dc.type == 'CANDB':
-                self._candb.description = dc.value
+                self._canbus.description = dc.value
             elif dc.type == 'NODE':
-                self._candb.get_node(dc.identifier).description = dc.value
+                self._canbus.get_node(dc.identifier).description = dc.value
             elif dc.type == 'MESSAGE':
-                self._candb.get_message(dc.identifier).description = dc.value
+                self._canbus.get_message(dc.identifier).description = dc.value
             elif dc.type == 'SIGNAL':
-                self._candb.get_signal(dc.identifier[0], dc.identifier[1]).description = dc.value
+                self._canbus.get_signal(dc.identifier[0], dc.identifier[1]).description = dc.value
             self._mode = ('NORMAL', None)
 
     @staticmethod
