@@ -16,6 +16,7 @@ testset_desc_candb = ['CM_ "The Description";', 'CM_    "The Description";']
 testset_desc_node = ['CM_ BU_ Node0 "The Description";', 'CM_    BU_   Node0    "The Description";']
 testset_desc_message = ['CM_ BO_ 1234 "The Description";', 'CM_    BO_   1234    "The Description";']
 testset_desc_signal = ['CM_ SG_ 1234 Signal0 "The Description";', 'CM_    SG_  1234   Signal0    "The Description";']
+testset_bus_config = ['BS_: 500', 'BS_\t :\t 500\t ']
 
 class TestDBCParsing(object):
     @pytest.mark.parametrize("line", testset_version)
@@ -162,8 +163,15 @@ class TestDBCParsing(object):
             parser._parse_line(line)
         assert parser._canbus.description == ' Line 1\t\nLine2\nLine3  '
 
+    @pytest.mark.parametrize('line', testset_bus_config)
+    def test_parse_bus_config(self, line):
+        parser = DBCParser()
+        parser._parse_line(line)
+        assert parser._canbus.speed == 500
+
 def test_whole_dbc():
     parser = DBCParser()
-    candb = parser.parse_file('tests/test.dbc')
+    candb = parser.parse_file('docs/DBC_template.dbc')
     assert len(candb.nodes) == 3
     assert candb.version == "1.0"
+    assert candb.speed == 500

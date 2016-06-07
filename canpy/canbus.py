@@ -10,6 +10,7 @@ class CANBus(object):
 
         self.version = ""
         self.description = ""
+        self.speed = 100
 
     # Property definitions
     @property

@@ -18,7 +18,8 @@ class DBCParser(object):
                           'BU_':     self._parse_nodes,
                           'BO_':     self._parse_message,
                           'SG_':     self._parse_signal,
-                          'CM_':     self._parse_description
+                          'CM_':     self._parse_description,
+                          'BS_':     self._parse_bus_configuration,
                          }
         self._force_parser = False
 
@@ -62,7 +63,6 @@ class DBCParser(object):
         """
         reg = re.search('VERSION\s*"(?P<version>\S+)"', version_str)
         self._canbus.version = reg.group('version')
-        self._mode = ('NORMAL', None)
 
     def _parse_nodes(self, nodes_str):
         """Parses a nodes string
@@ -72,11 +72,10 @@ class DBCParser(object):
         Returns:
             List with all the node names
         """
-        reg = re.search('BU_\s*:(?P<nodes>.+)', nodes_str)
+        reg = re.search('BU_\s*:\s*(?P<nodes>.+)\s*', nodes_str)
         node_names_str = re.sub('\s+', ' ', reg.group('nodes')).strip()
         for node_name in node_names_str.split(' '):
             self._canbus.add_node(CANNode(node_name))
-        self._mode = ('NORMAL', None)
 
     def _parse_message(self, message_str):
         """Parses a message string
@@ -161,3 +160,9 @@ class DBCParser(object):
             self._mode = ('NORMAL', None)
         else:
             self._mode = (self._mode[0], (self._mode[1][0], self._mode[1][1] + line))
+
+    def _parse_bus_configuration(self, bus_config_str):
+        pattern = 'BS_\s*:\s*(?P<speed>\d+)?\s*'
+        reg = re.search(pattern, bus_config_str)
+        if reg.group('speed'):
+            self._canbus.speed = int(reg.group('speed'))
