@@ -3,6 +3,7 @@ __author__ = "Stefan Hölzl"
 import re
 
 from canpy.can_bus import CANBus, CANNode, CANMessage, CANSignal
+from canpy.can_bus.can_attribute import *
 
 
 class DBCParser(object):
@@ -19,6 +20,7 @@ class DBCParser(object):
                           'SG_':     self._parse_signal,
                           'CM_':     self._parse_description,
                           'BS_':     self._parse_bus_configuration,
+                          'BA_DEF_': self._parse_attribute_definition,
                          }
         self._force_parser = False
 
@@ -60,7 +62,7 @@ class DBCParser(object):
         Returns:
             Version from the verstion string
         """
-        reg = re.search('VERSION\s*"(?P<version>\S+)"', version_str)
+        reg = re.search('VERSION\s+"(?P<version>\S+)"', version_str)
         self._canbus.version = reg.group('version')
 
     def _parse_nodes(self, nodes_str):
@@ -84,7 +86,7 @@ class DBCParser(object):
         Returns:
             Namedtuple with can_id, name, length and sender name of the message
         """
-        reg = re.search('BO_\s*(?P<can_id>\d+)\s*(?P<name>\S+)\s*:\s*(?P<length>\d+)\s*(?P<sender>\S+)', message_str)
+        reg = re.search('BO_\s+(?P<can_id>\d+)\s+(?P<name>\S+)\s*:\s*(?P<length>\d+)\s+(?P<sender>\S+)', message_str)
         message = CANMessage(int(reg.group('can_id')), reg.group('name').strip(), int(reg.group('length')))
         self._canbus.nodes[reg.group('sender').strip()].add_message(message)
         self._mode = ('MESSAGE', message)
@@ -97,10 +99,10 @@ class DBCParser(object):
         Returns:
             Namedtuple with the signal informations
         """
-        pattern  = 'SG_\s*(?P<name>\S+)\s*(?P<is_multipexer>M)?(?P<multiplexer_id>m\d+)?\s*:\s*'
+        pattern  = 'SG_\s+(?P<name>\S+)\s*(?P<is_multipexer>M)?(?P<multiplexer_id>m\d+)?\s*:\s*'
         pattern += '(?P<start_bit>\d+)\|(?P<length>\d+)\@(?P<endianness>[0|1])(?P<sign>[\+|\-])\s*'
         pattern += '\(\s*(?P<factor>\S+)\s*,\s*(?P<offset>\S+)\s*\)\s*\[\s*(?P<min_value>\S+)\s*\|\s*(?P<max_value>\S+)\s*\]'
-        pattern += '\s*"(?P<unit>\S*)"\s*(?P<receivers>.+)'
+        pattern += '\s*"(?P<unit>\S*)"\s+(?P<receivers>.+)'
         reg = re.search(pattern, signal_str)
 
         little_endian = True if reg.group('endianness').strip() == '1' else False
@@ -129,7 +131,7 @@ class DBCParser(object):
         Returns:
             Namedtuple with value, type and identifier of the description
         """
-        pattern  = 'CM_\s*(?P<node>BU_)?\s*(?P<msg>BO_)?\s*(?P<sig>SG_)?\s*'
+        pattern  = 'CM_\s+(?P<node>BU_)?(?P<msg>BO_)?(?P<sig>SG_)?\s*'
         pattern += '(?P<can_id>\d*)?\s*(?P<name>\S*)?\s*"(?P<value>.+)'
         reg = re.search(pattern, desc_str)
 
@@ -165,3 +167,34 @@ class DBCParser(object):
         reg = re.search(pattern, bus_config_str)
         if reg.group('speed'):
             self._canbus.speed = int(reg.group('speed'))
+
+    def _parse_attribute_definition(self, attribute_definition_str):
+        pattern  = 'BA_DEF_\s+(?P<obj_type>...)?\s*"(?P<attr_name>\S+)"\s+'
+        pattern += '(?P<attr_type>\S+)\s*(?P<attr_config>.+)?\s*;'
+        reg = re.search(pattern, attribute_definition_str)
+
+        obj_type = CANBus
+        if 'BU_' in reg.groups():
+            obj_type = CANNode
+        elif 'BO_' in reg.groups():
+            obj_type = CANMessage
+        elif 'SG_' in reg.groups():
+            obj_type = CANSignal
+
+        ad = None
+        if reg.group('attr_type') == 'FLOAT':
+            reg_cfg = re.search('\s*(?P<min>\S+)\s*(?P<max>\S+)', reg.group('attr_config'))
+            ad = CANFloatAttributeDefinition(reg.group('attr_name'), obj_type,
+                                             float(reg_cfg.group('min')), float(reg_cfg.group('max')))
+        elif reg.group('attr_type') == 'INT':
+            reg_cfg = re.search('\s*(?P<min>\S+)\s*(?P<max>\S+)', reg.group('attr_config'))
+            ad = CANIntAttributeDefinition(reg.group('attr_name'), obj_type,
+                                             float(reg_cfg.group('min')), float(reg_cfg.group('max')))
+        elif reg.group('attr_type') == 'STRING':
+            ad = CANStringAttributeDefinition(reg.group('attr_name'), obj_type)
+        elif reg.group('attr_type') == 'ENUM':
+            values = reg.group('attr_config').split(',')
+            values = list(map(lambda val: val.replace('"', '').strip(), values))
+            ad = CANEnumAttributeDefinition(reg.group('attr_name'), obj_type, values)
+
+        self._canbus.attribute_definitions.add_attribute_definition(ad)

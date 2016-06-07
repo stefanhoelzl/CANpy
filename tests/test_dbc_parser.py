@@ -2,7 +2,8 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.can_bus import CANNode, CANMessage, CANSignal
+from canpy.can_bus import CANNode, CANMessage, CANSignal, CANBus
+from canpy.can_bus.can_attribute import *
 from canpy.parser.dbc_parser import DBCParser
 
 testset_nodes = ['BU_   :   Node0   Node1    Node2', 'BU_:Node0 Node1 Node2']
@@ -168,6 +169,25 @@ class TestDBCParsing(object):
         parser = DBCParser()
         parser._parse_line(line)
         assert parser._canbus.speed == 500
+
+    @pytest.mark.parametrize('line,obj_type_expected,def_type_expected,check_config', [
+                                ('BA_DEF_ SG_ "SGEnumAttribute" ENUM "Val0", "Val1", "Val2" ;', CANSignal,
+                                    CANEnumAttributeDefinition, lambda ad: ad.values == ["Val0", "Val1", "Val2"]),
+                                ('BA_DEF_ "FloatAttribute" FLOAT 0 50.5;', CANBus,
+                                    CANFloatAttributeDefinition, lambda ad: ad.value_min == 0 and ad.value_max == 50.5),
+                                ('BA_DEF_ BO_ "BOStringAttribute" STRING;', CANMessage,
+                                    CANStringAttributeDefinition, lambda ad: True),
+                                ('BA_DEF_ BU_ "BUIntAttribute" INT 0 100;', CANNode,
+                                    CANIntAttributeDefinition, lambda ad: ad.value_min == 0 and ad.value_max == 100),
+    ])
+    def test_parse_attribute_definition(self, line, obj_type_expected, def_type_expected, check_config):
+        parser = DBCParser()
+        parser._parse_line(line)
+        assert obj_type_expected in parser._canbus.attribute_definitions
+        assert len(parser._canbus.attribute_definitions[obj_type_expected]) == 1
+        ad = list(parser._canbus.attribute_definitions[obj_type_expected].values())[0]
+        assert def_type_expected == type(ad)
+        assert check_config(ad)
 
 def test_whole_dbc():
     parser = DBCParser()
