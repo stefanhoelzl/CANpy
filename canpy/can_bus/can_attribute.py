@@ -40,7 +40,7 @@ class CANAttribute(object):
             AttributeError: If the value is not valid
         """
         if self.definition.check_value(value):
-            self._value = value
+            self._value = self.definition.cast(value)
         else:
             raise AttributeError('Attribute value not allowed')
 
@@ -49,18 +49,33 @@ class CANAttributeDefinition(object):
     def __init__(self, name, can_obj_type):
         self.name = name
         self.obj_type = can_obj_type
-        self.default = None
+        self._default = None
+
+    @property
+    def default(self):
+        return self._default
+
+    @default.setter
+    def default(self, value):
+        if self.check_value(value):
+            self._default = self.cast(value)
 
     def check_value(self, value):
         return True
+
+    def cast(self, value):
+        return value
 
 class CANStringAttributeDefinition(CANAttributeDefinition):
     def check_value(self, value):
         try:
-            str(value)
+            self.cast(value)
         except:
             return False
         return True
+
+    def cast(self, value):
+        return str(value)
 
 
 class CANEnumAttributeDefinition(CANAttributeDefinition):
@@ -69,9 +84,19 @@ class CANEnumAttributeDefinition(CANAttributeDefinition):
         self.values = values
 
     def check_value(self, value):
-        if 0 <= value < len(self.values):
+        try:
+            value = self.cast(value)
+        except:
+            return False
+        if value in self.values:
             return True
         return False
+
+    def cast(self, value):
+        value = int(value)
+        if value < 0:
+            raise AttributeError('Negative enum index not allowed')
+        return self.values[value]
 
 
 class CANFloatAttributeDefinition(CANAttributeDefinition):
@@ -82,20 +107,17 @@ class CANFloatAttributeDefinition(CANAttributeDefinition):
 
     def check_value(self, value):
         try:
-            float(value)
+            value = self.cast(value)
         except:
             return False
         if self.value_min <= value <= self.value_max:
             return True
         return False
 
+    def cast(self, value):
+        return float(value)
+
 
 class CANIntAttributeDefinition(CANFloatAttributeDefinition):
-    def check_value(self, value):
-        if not super().check_value(value):
-            return False
-        try:
-            int(value)
-        except:
-            return False
-        return True
+    def cast(self, value):
+        return int(str(value))

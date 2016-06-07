@@ -229,7 +229,7 @@ class TestCANAttribute(object):
         def __init__(self, name, can_obj_type, check=True, default=None):
             super().__init__(name, can_obj_type)
             self.check = check
-            self.default = default
+            self._default = default
 
         def check_value(self, value):
             return self.check

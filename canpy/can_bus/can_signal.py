@@ -1,8 +1,9 @@
 __author__ = "Stefan Hölzl"
 
 from canpy.bit_array import BitArray
+from canpy.can_bus.can_bus import CANObject
 
-class CANSignal(object):
+class CANSignal(CANObject):
     """Represents a CAN-Signal"""
     def __init__(self, name, start_bit, length, little_endian=True, signed=False, factor=1.0, offset=0.0, value_min=0,
                  value_max=0, unit="", is_multiplexer=False, multiplexer_id=None):

@@ -14,13 +14,15 @@ class DBCParser(object):
         self._mode = ('NORMAL', None)
         self._canbus = CANBus()
 
-        self._keywords = {'VERSION': self._parse_version,
-                          'BU_':     self._parse_nodes,
-                          'BO_':     self._parse_message,
-                          'SG_':     self._parse_signal,
-                          'CM_':     self._parse_description,
-                          'BS_':     self._parse_bus_configuration,
-                          'BA_DEF_': self._parse_attribute_definition,
+        self._keywords = {'VERSION':      self._parse_version,
+                          'BU_':          self._parse_nodes,
+                          'BO_ ':         self._parse_message,
+                          'SG_ ':         self._parse_signal,
+                          'CM_ ':         self._parse_description,
+                          'BS_':          self._parse_bus_configuration,
+                          'BA_DEF_ ':     self._parse_attribute_definition,
+                          'BA_DEF_DEF_ ': self._parse_attribute_default_value,
+                          'BA_ ':         self._parse_attribute,
                          }
         self._force_parser = False
 
@@ -169,7 +171,7 @@ class DBCParser(object):
             self._canbus.speed = int(reg.group('speed'))
 
     def _parse_attribute_definition(self, attribute_definition_str):
-        pattern  = 'BA_DEF_\s+(?P<obj_type>...)?\s*"(?P<attr_name>\S+)"\s+'
+        pattern  = 'BA_DEF_\s+(?P<obj_type>\S+)?\s*"(?P<attr_name>\S+)"\s+'
         pattern += '(?P<attr_type>\S+)\s*(?P<attr_config>.+)?\s*;'
         reg = re.search(pattern, attribute_definition_str)
 
@@ -198,3 +200,33 @@ class DBCParser(object):
             ad = CANEnumAttributeDefinition(reg.group('attr_name'), obj_type, values)
 
         self._canbus.add_attribute_definition(ad)
+
+    def _parse_attribute_value(self, cad, attr_value_str):
+        if type(cad) == CANStringAttributeDefinition:
+            reg_str = re.search('\s*"(?P<value>\S+)"\s*', attr_value_str)
+            attr_value_str = reg_str.group('value')
+        return attr_value_str
+
+    def _parse_attribute_default_value(self, attr_default_str):
+        pattern = 'BA_DEF_DEF_\s+"(?P<attr_name>\S+)"\s+(?P<default>\S+)\s*;'
+        reg = re.search(pattern, attr_default_str)
+
+        cad = self._canbus.attribute_definitions[reg.group('attr_name')]
+        default_value = self._parse_attribute_value(cad, reg.group('default'))
+        cad.default = default_value
+
+    def _parse_attribute(self, attribute_str):
+        pattern  = 'BA_\s+"(?P<attr_name>\S+)"\s*(?P<node>BU_)?(?P<msg>BO_)?(?P<sig>SG_)?\s*'
+        pattern += '(?P<can_id>\d*)?\s*(?P<name>\S*)?\s+(?P<value>\S+)\s*;'
+        reg = re.search(pattern, attribute_str)
+
+        can_object = self._canbus
+        if reg.group('node'):
+            can_object = self._canbus.nodes[reg.group('name')]
+        elif reg.group('msg'):
+            can_object = self._canbus.get_message(int(reg.group('can_id')))
+        elif reg.group('sig'):
+            can_object = self._canbus.get_signal(int(reg.group('can_id')), reg.group('name'))
+
+        cad = self._canbus.attribute_definitions[reg.group('attr_name')]
+        can_object.add_attribute(CANAttribute(cad, value=self._parse_attribute_value(cad, reg.group('value'))))

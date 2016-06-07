@@ -1,6 +1,8 @@
 __author__ = "Stefan Hölzl"
 
-class CANMessage(object):
+from canpy.can_bus.can_bus import CANObject
+
+class CANMessage(CANObject):
     """Represents a CAN-Message"""
     def __init__(self, can_id, name, length):
         """Initializes the object

@@ -189,6 +189,52 @@ class TestDBCParsing(object):
         assert def_type_expected == type(ad)
         assert check_config(ad)
 
+    @pytest.mark.parametrize('line, default_value_expected, attr_definition', [
+        ('BA_DEF_DEF_ "StringAttribute" "DefaultValue";', 'DefaultValue', CANStringAttributeDefinition('StringAttribute', None)),
+        ('BA_DEF_DEF_ "IntAttribute" 25;', 25, CANIntAttributeDefinition('IntAttribute', None, 0, 50)),
+        ('BA_DEF_DEF_ "FloatAttribute" 10.99;', 10.99,  CANFloatAttributeDefinition('FloatAttribute', None, 0, 11)),
+        ('BA_DEF_DEF_ "EnumAttribute" 1;', 'Val1', CANEnumAttributeDefinition('EnumAttribute', None, ['Val0', 'Val1', 'Val2'])),
+    ])
+    def test_parse_attribute_default(self, line, default_value_expected, attr_definition):
+        parser = DBCParser()
+        parser._canbus.add_attribute_definition(attr_definition)
+        parser._parse_line(line)
+        attr_def = attr_definition
+        assert attr_def.default == default_value_expected
+
+    @pytest.mark.parametrize('line, expected_value, attr_definition, cfg_dict', [
+        ('BA_ "FloatAttribute" 100.5;', 100.5, CANFloatAttributeDefinition('FloatAttribute', CANBus, 99, 101), {}),
+        ('BA_ "BUIntAttribute" BU_ Node0 100;', 100,
+            CANIntAttributeDefinition('BUIntAttribute', CANNode, 99, 101), {'NODE': 'Node0'}),
+        ('BA_ "BOStringAttribute" BO_ 1234 "MessageAttribute";', "MessageAttribute",
+            CANStringAttributeDefinition('BOStringAttribute', CANMessage), {'NODE': 'Node0', 'MESSAGE': 1234}),
+        ('BA_ "SGEnumAttribute" SG_ 1234 Signal0 2;', "Val2",
+            CANEnumAttributeDefinition('SGEnumAttribute', CANSignal, ['Val0', 'Val1', 'Val2']),
+                {'NODE': 'Node0', 'MESSAGE': 1234, 'SIGNAL': 'Signal0'}),
+    ])
+    def test_parse_attribute(self, line, expected_value, attr_definition, cfg_dict):
+        parser = DBCParser()
+        parser._canbus.add_attribute_definition(attr_definition)
+
+        if attr_definition.obj_type == CANBus:
+            can_object = parser._canbus
+        if attr_definition.obj_type in [CANNode, CANMessage, CANSignal]:
+            cfg_dict['NODE'] = CANNode(cfg_dict['NODE'])
+            parser._canbus.add_node(cfg_dict['NODE'])
+            can_object = cfg_dict['NODE']
+        if attr_definition.obj_type in [CANMessage, CANSignal]:
+            cfg_dict['MESSAGE'] = CANMessage(cfg_dict['MESSAGE'], 'Message', 1)
+            cfg_dict['NODE'].add_message(cfg_dict['MESSAGE'])
+            can_object = cfg_dict['MESSAGE']
+        if attr_definition.obj_type in [CANSignal]:
+            cfg_dict['SIGNAL'] = CANSignal(cfg_dict['SIGNAL'], 0, 8)
+            cfg_dict['MESSAGE'].add_signal(cfg_dict['SIGNAL'])
+            can_object = cfg_dict['SIGNAL']
+
+        parser._parse_line(line)
+        assert can_object.attributes[attr_definition.name].value == expected_value
+
+
 def test_whole_dbc():
     parser = DBCParser()
     candb = parser.parse_file('docs/DBC_template.dbc')
