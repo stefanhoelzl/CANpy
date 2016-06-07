@@ -45,6 +45,14 @@ FLOAT    | floating point      | `<min> <max>`
 STRING   | string              | 
 ENUM     | enumeration         | `"<Value0>","<Value1>"...`
 
+## BA_DEF_DEF_
+Attribute default value  
+Format: `BA_DEF_DEF_ "<AttributeName>" ["]<DefaultValue>["];`
+
+## BA_
+Attribute  
+Format: `BA_ "<AttributeName>" [BU_|BO_|SG_] [Node|CAN-ID] [SignalName] <AttributeValue>;`
+
 # Sources
 http://pisnoop.s3.amazonaws.com/snoop_help_dbc.htm  
 http://www.racelogic.co.uk/_downloads/vbox/Application_Notes/CAN%20Format%20for%20VBOXII%20and%20PRO%20v4.pdf  
