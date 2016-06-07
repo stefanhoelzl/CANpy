@@ -101,6 +101,9 @@ class DBCParser(object):
         Returns:
             Namedtuple with the signal informations
         """
+        if self._mode[0] != 'MESSAGE':
+            raise RuntimeError('Signal description not in message block')
+
         pattern  = 'SG_\s+(?P<name>\S+)\s*(?P<is_multipexer>M)?(?P<multiplexer_id>m\d+)?\s*:\s*'
         pattern += '(?P<start_bit>\d+)\|(?P<length>\d+)\@(?P<endianness>[0|1])(?P<sign>[\+|\-])\s*'
         pattern += '\(\s*(?P<factor>\S+)\s*,\s*(?P<offset>\S+)\s*\)\s*\[\s*(?P<min_value>\S+)\s*\|\s*(?P<max_value>\S+)\s*\]'
@@ -113,8 +116,6 @@ class DBCParser(object):
         is_multiplexer = True if reg.group('is_multipexer') else False
         multiplexer_id = int(reg.group('multiplexer_id').strip()[1:]) if reg.group('multiplexer_id') else None
 
-        if self._mode[0] != 'MESSAGE':
-            raise RuntimeError('Signal description not in message block')
         signal = CANSignal(name=reg.group('name').strip(), start_bit=int(reg.group('start_bit')),
                            length=int(reg.group('length')), little_endian=little_endian, signed=signed,
                            factor=float(reg.group('factor')), offset=float(reg.group('offset')),

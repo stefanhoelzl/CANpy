@@ -6,156 +6,135 @@ from canpy.can_bus import CANNode, CANMessage, CANSignal, CANBus
 from canpy.can_bus.can_attribute import *
 from canpy.parser.dbc_parser import DBCParser
 
-testset_nodes = ['BU_   :   Node0   Node1    Node2', 'BU_:Node0 Node1 Node2']
-testset_version = ['VERSION "1.0"', 'VERSION    "1.0"']
-testset_message = ['BO_ 1234 CANMessage:8 Node0', 'BO_  1234  CANMessage  :  8  Node0']
-testset_signal =  ['SG_     Signal1     :    32|32@1+   (   33.3     ,  0    )  [0|100]     "%"     Node1   Node2',
-                   'SG_ Signal1:32|32@1+ (33.3,0) [ 0 | 100  ] "%" Node1 Node2']
-testset_signal_multiplexer = ['SG_ Signal1  M   :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2']
-testset_signal_multiplexed = ['SG_ Signal1  m34  :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2']
-testset_desc_candb = ['CM_ "The Description";', 'CM_    "The Description";']
-testset_desc_node = ['CM_ BU_ Node0 "The Description";', 'CM_    BU_   Node0    "The Description";']
-testset_desc_message = ['CM_ BO_ 1234 "The Description";', 'CM_    BO_   1234    "The Description";']
-testset_desc_signal = ['CM_ SG_ 1234 Signal0 "The Description";', 'CM_    SG_  1234   Signal0    "The Description";']
-testset_bus_config = ['BS_: 500', 'BS_\t :\t 500\t ']
-
 class TestDBCParsing(object):
-    @pytest.mark.parametrize("line", testset_version)
-    def test_parse_version(self, line):
+    @pytest.mark.parametrize("line, expected_version", [
+        ('VERSION "1.0"', '1.0'),
+        ('VERSION    "1.0"', '1.0'),
+    ])
+    def test_parse_version(self, line, expected_version):
         parser = DBCParser()
         parser._parse_line(line)
-        assert parser._canbus.version == "1.0"
+        assert parser._canbus.version == expected_version
 
-    @pytest.mark.parametrize("line", testset_nodes)
-    def test_parse_nodes(self, line):
+    @pytest.mark.parametrize("line, expected_nodes", [
+        ('BU_   :   Node0   Node1    Node2', ['Node0', 'Node1', 'Node2']),
+        ('BU_:Node0 Node1 Node2', ['Node0', 'Node1', 'Node2']),
+    ])
+    def test_parse_nodes(self, line, expected_nodes):
         parser = DBCParser()
         parser._parse_line(line)
-        assert len(parser._canbus.nodes) == 3
+        assert len(parser._canbus.nodes) == len(expected_nodes)
         node_names = parser._canbus._nodes.keys()
-        assert "Node0" in node_names
-        assert "Node1" in node_names
-        assert "Node2" in node_names
+        for node in expected_nodes:
+            assert node in node_names
 
-    @pytest.mark.parametrize("line", testset_message)
-    def test_parse_message(self, line):
+    @pytest.mark.parametrize("line, expected_name, expected_id, expected_length, expected_sender", [
+        ('BO_ 1234 CANMessage:8 Node0', 'CANMessage', 1234, 8, 'Node0'),
+        ('BO_  1234  CANMessage  :  8  Node0', 'CANMessage', 1234, 8, 'Node0'),
+    ])
+    def test_parse_message(self, line, expected_name, expected_id, expected_length, expected_sender):
         parser = DBCParser()
-        sender = CANNode('Node0')
+        sender = CANNode(expected_sender)
         parser._canbus.add_node(sender)
         parser._parse_line(line)
-        msg = parser._canbus.nodes['Node0'].messages[1234]
-        assert msg.name == 'CANMessage'
-        assert msg.can_id == 1234
-        assert msg.length == 8
+        msg = parser._canbus.get_message(1234)
+        assert msg.name == expected_name
+        assert msg.can_id == expected_id
+        assert msg.length == expected_length
         assert msg.sender == sender
 
-    @pytest.mark.parametrize("line", testset_signal)
-    def test_parse_signal(self, line):
+    testset_signal_multiplexer = ['SG_ Signal1  M   :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2']
+    testset_signal_multiplexed = ['SG_ Signal1  m34  :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2']
+
+    @pytest.mark.parametrize('line, signal_name, start_bit, length, little_endian, signed, factor, offset, value_min,'\
+                             'value_max, unit, is_multiplexer, multiplexer_id, nodes', [
+        ('SG_     Signal1     :    32|32@1+   (   33.3     ,  0    )  [0|100]     "%"     Node1   Node2',
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, None, ['Node1', 'Node2']),
+        ('SG_ Signal1:32|32@1+ (33.3,0) [ 0 | 100  ] "%" Node1 Node2',
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, None, ['Node1', 'Node2']),
+        ('SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node0',
+            'Signal0', 0, 32, True, True, 1, 0, 0, 0, '', False, None, ['Node0']),
+        ('SG_ Signal1  m34  :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2',
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, 34, ['Node1', 'Node2']),
+        ('SG_ Signal1  M   :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2',
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', True, None, ['Node1', 'Node2']),
+    ])
+    def test_parse_signal(self, line, signal_name, start_bit, length, little_endian, signed, factor, offset, value_min,\
+                          value_max, unit, is_multiplexer, multiplexer_id, nodes):
         parser = DBCParser()
-        node0 = CANNode('Node0')
-        parser._canbus.add_node(node0)
-        node1 = CANNode('Node1')
-        parser._canbus.add_node(node1)
-        node2 = CANNode('Node2')
-        parser._canbus.add_node(node2)
+        parser._canbus.add_node(CANNode('Sender'))
+        for node in nodes:
+            parser._canbus.add_node(CANNode(node))
         msg = CANMessage(1, 'CANMessage', 8)
-        node0.add_message(msg)
+        parser._canbus.nodes['Sender'].add_message(msg)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
-        sig = msg.signals['Signal1']
-        assert sig.name == 'Signal1'
-        assert sig.start_bit == 32
-        assert sig.length == 32
-        assert sig.little_endian == True
-        assert sig.signed == False
-        assert sig.factor == 33.3
-        assert sig.value_min == 0
-        assert sig.value_max == 100
-        assert sig.unit == '%'
-        assert sig.is_multiplexer == False
-        assert sig.multiplexer_id == None
-        assert node1 in sig.receiver
-        assert node2 in sig.receiver
+        sig = msg.signals[signal_name]
+        assert sig.name == signal_name
+        assert sig.start_bit == start_bit
+        assert sig.length == length
+        assert sig.little_endian == little_endian
+        assert sig.signed == signed
+        assert sig.factor == factor
+        assert sig.value_min == value_min
+        assert sig.value_max == value_max
+        assert sig.unit == unit
+        assert sig.is_multiplexer == is_multiplexer
+        assert sig.multiplexer_id == multiplexer_id
+        for node in nodes:
+            assert parser._canbus.nodes[node] in sig.receiver
 
     def test_parse_signal_wrong_block(self):
         parser = DBCParser()
         node = CANNode('Node0')
         parser._mode = ('NORMAL', None)
         with pytest.raises(RuntimeError):
-            parser._parse_line(testset_signal[0])
+            parser._parse_line('SG_ DUMMY_LINE')
 
-    def test_parse_signal_no_unit_signed_no_receiver(self):
+    @pytest.mark.parametrize('line, expected_desc', [
+        ('CM_ "The Description";', 'The Description'), ('CM_    \t"The Description";', 'The Description'),
+    ])
+    def test_parse_candb_desc(self, line, expected_desc):
         parser = DBCParser()
-        node0 = CANNode('Node0')
-        parser._canbus.add_node(node0)
-        msg = CANMessage(1, 'CANMessage', 8)
-        node0.add_message(msg)
-        parser._mode = ('MESSAGE', msg)
-        parser._parse_line('SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node0')
-        sig = msg.signals['Signal0']
-        assert sig.signed == True
-        assert sig.unit == ""
-
-    @pytest.mark.parametrize("line", testset_signal_multiplexer)
-    def test_parse_multiplexed_signal(self, line):
-        parser = DBCParser()
-        node0 = CANNode('Node0')
-        msg = CANMessage(1, 'CANMessage', 8)
-        node0.add_message(msg)
-        node1 = CANNode('Node1')
-        parser._canbus.add_node(node1)
-        node2 = CANNode('Node2')
-        parser._canbus.add_node(node2)
-        parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
-        sig = msg.signals['Signal1']
-        assert sig.is_multiplexer == True
-        assert sig.multiplexer_id == None
+        assert parser._canbus.description == expected_desc
 
-    @pytest.mark.parametrize("line", testset_signal_multiplexed)
-    def test_parse_multiplexer_signal(self, line):
+    @pytest.mark.parametrize('line, node, expected_desc', [
+        ('CM_ BU_ Node0 "The Description";', 'Node0', 'The Description'),
+        ('CM_    BU_   Node0    "The Description";', 'Node0', 'The Description'),
+    ])
+    def test_parse_node_desc(self, line, node, expected_desc):
         parser = DBCParser()
-        node0 = CANNode('Node0')
-        msg = CANMessage(1, 'CANMessage', 8)
-        node0.add_message(msg)
-        node1 = CANNode('Node1')
-        parser._canbus.add_node(node1)
-        node2 = CANNode('Node2')
-        parser._canbus.add_node(node2)
-        parser._mode = ('MESSAGE', msg)
+        parser._canbus.add_node(CANNode(node))
         parser._parse_line(line)
-        sig = msg.signals['Signal1']
-        assert sig.is_multiplexer == False
-        assert sig.multiplexer_id == 34
+        assert parser._canbus.nodes[node].description == expected_desc
 
-    def test_parse_candb_desc(self):
-        parser = DBCParser()
-        parser._parse_line(testset_desc_candb[0])
-        assert parser._canbus.description == "The Description"
-
-    def test_parse_node_desc(self):
-        parser = DBCParser()
-        parser._canbus.add_node(CANNode('Node0'))
-        parser._parse_line(testset_desc_node[0])
-        assert parser._canbus.nodes['Node0'].description == "The Description"
-
-    def test_parse_message_desc(self):
+    @pytest.mark.parametrize('line, can_id, expected_desc', [
+        ('CM_ BO_ 1234 "The Description";', 1234, 'The Description'),
+        ('CM_    BO_   1234    "The Description";', 1234, 'The Description'),
+    ])
+    def test_parse_message_desc(self, line, can_id, expected_desc):
         parser = DBCParser()
         node = CANNode('Node0')
-        node.add_message(CANMessage(1234, 'CANMessage', 8))
+        node.add_message(CANMessage(can_id, 'CANMessage', 8))
         parser._canbus.add_node(node)
-        parser._parse_line(testset_desc_message[0])
-        assert parser._canbus.nodes['Node0'].messages[1234].description == "The Description"
+        parser._parse_line(line)
+        assert parser._canbus.nodes['Node0'].messages[1234].description == expected_desc
 
-    def test_parse_signal_desc(self):
+    @pytest.mark.parametrize('line, can_id, signal_name, expected_desc', [
+        ('CM_ SG_ 1234 Signal0 "The Description";', 1234, 'Signal0', 'The Description'),
+        ('CM_    SG_  1234   Signal0    "The Description";', 1234, 'Signal0', 'The Description'),
+    ])
+    def test_parse_signal_desc(self, line, can_id, signal_name, expected_desc):
         parser = DBCParser()
-        node = CANNode('Node0')
-        msg = CANMessage(1234, 'CANMessage', 8)
-        sig = CANSignal('Signal0', 0, 8)
+        node = CANNode('Node')
+        msg = CANMessage(can_id, 'Message', 8)
+        sig = CANSignal(signal_name, 0, 8)
         msg.add_signal(sig)
         node.add_message(msg)
         parser._canbus.add_node(node)
-        parser._parse_line(testset_desc_signal[0])
-        assert sig.description == "The Description"
+        parser._parse_line(line)
+        assert sig.description == expected_desc
 
     def test_parse_multiline_desc(self):
         parser = DBCParser()
@@ -164,11 +143,13 @@ class TestDBCParsing(object):
             parser._parse_line(line)
         assert parser._canbus.description == ' Line 1\t\nLine2\nLine3  '
 
-    @pytest.mark.parametrize('line', testset_bus_config)
-    def test_parse_bus_config(self, line):
+    @pytest.mark.parametrize('line, expected_speed', [
+        ('BS_: 500', 500), ('BS_\t :\t 500\t ', 500),
+    ])
+    def test_parse_bus_config(self, line, expected_speed):
         parser = DBCParser()
         parser._parse_line(line)
-        assert parser._canbus.speed == 500
+        assert parser._canbus.speed == expected_speed
 
     @pytest.mark.parametrize('line, obj_type_expected, def_name, def_type_expected, check_config', [
                                 ('BA_DEF_ SG_ "SGEnumAttribute" ENUM "Val0", "Val1", "Val2" ;', CANSignal, 'SGEnumAttribute',
@@ -190,10 +171,12 @@ class TestDBCParsing(object):
         assert check_config(ad)
 
     @pytest.mark.parametrize('line, default_value_expected, attr_definition', [
-        ('BA_DEF_DEF_ "StringAttribute" "DefaultValue";', 'DefaultValue', CANStringAttributeDefinition('StringAttribute', None)),
+        ('BA_DEF_DEF_ "StringAttribute" "DefaultValue";', 'DefaultValue',
+            CANStringAttributeDefinition('StringAttribute', None)),
         ('BA_DEF_DEF_ "IntAttribute" 25;', 25, CANIntAttributeDefinition('IntAttribute', None, 0, 50)),
         ('BA_DEF_DEF_ "FloatAttribute" 10.99;', 10.99,  CANFloatAttributeDefinition('FloatAttribute', None, 0, 11)),
-        ('BA_DEF_DEF_ "EnumAttribute" 1;', 'Val1', CANEnumAttributeDefinition('EnumAttribute', None, ['Val0', 'Val1', 'Val2'])),
+        ('BA_DEF_DEF_ "EnumAttribute" 1;', 'Val1',
+            CANEnumAttributeDefinition('EnumAttribute', None, ['Val0', 'Val1', 'Val2'])),
     ])
     def test_parse_attribute_default(self, line, default_value_expected, attr_definition):
         parser = DBCParser()
