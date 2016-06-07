@@ -116,6 +116,7 @@ class CANMessage(object):
         self.description = ""
         self.sender = None
 
+    # Property definitions
     @property
     def signals(self):
         return self._signals
@@ -136,6 +137,12 @@ class CANMessage(object):
     # Protocol definitions
     def __str__(self, *args, **kwargs):
         return 'CANMessage(CAN-ID: {}, Name: {}, Length: {})'.format(self.can_id, self.name, self.length)
+
+    def __int__(self):
+        value = 0
+        for signal in self.signals.values():
+            value += int(signal.bits) << signal.start_bit
+        return value
 
 class CANSignal(object):
     """Represents a CAN-Signal"""
@@ -258,3 +265,6 @@ class CANSignal(object):
     # Protocol definitions
     def __str__(self, *args, **kwargs):
         return 'CANSignal(Name: {}, Start: {}, Length: {})'.format(self.name, self.start_bit, self.length)
+
+    def __int__(self):
+        return self.raw_value

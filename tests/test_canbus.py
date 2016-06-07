@@ -74,6 +74,30 @@ class TestCANMessage(object):
         with pytest.raises(RuntimeError):
             msg.add_signal(sig)
 
+    def test_int(self):
+        msg = CANMessage(1, 'Name', 1)
+        sig = CANSignal('Signal', 0, 8)
+        sig.raw_value = 100
+        msg.add_signal(sig)
+        assert int(msg) == 100
+
+    def test_int_splitted(self):
+        msg = CANMessage(1, 'Name', 1)
+        sig = CANSignal('Signal', 4, 8)
+        sig.raw_value = 100
+        msg.add_signal(sig)
+        assert int(msg) == int(sig.bits) << 4
+
+    def test_int_two_signals(self):
+        msg = CANMessage(1, 'Name', 2)
+        sig0 = CANSignal('Signal0', 0, 8)
+        sig0.raw_value = 159
+        msg.add_signal(sig0)
+        sig1 = CANSignal('Signal1', 8, 8)
+        sig1.raw_value = 96
+        msg.add_signal(sig1)
+        assert int(msg) == int(sig0.bits) + (int(sig1.bits) << 8)
+
 class TestCANSignal(object):
     def test_add_receiver(self):
         node = CANNode('TestNode')
