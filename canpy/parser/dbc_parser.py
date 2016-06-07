@@ -33,7 +33,7 @@ class DBCParser(object):
         Args:
             file_name: Name of the file to parse.
         Returns:
-            CANDB object
+            CANBus object
         """
         self._canbus = CANBus()
         with open(file_name, 'r') as dbc_fh:
@@ -42,12 +42,10 @@ class DBCParser(object):
         return self._canbus
 
     def _parse_line(self, line):
-        """Parses one line of a dbc file and updates the CANDB
+        """Parses one line of a dbc file
 
         Args:
             line: One line of a dbc file as string
-        Raises:
-            RuntimeError: If signal description is not in a message block
         """
         if self._force_parser:
             self._force_parser(line)
@@ -57,23 +55,19 @@ class DBCParser(object):
                     parse_function(line)
 
     def _parse_version(self, version_str):
-        """Parses a version string
+        """Parses a version string and updates the CANBus
 
         Args:
             version_str: String containing version informations
-        Returns:
-            Version from the verstion string
         """
         reg = re.search('VERSION\s+"(?P<version>\S+)"', version_str)
         self._canbus.version = reg.group('version')
 
     def _parse_nodes(self, nodes_str):
-        """Parses a nodes string
+        """Parses a nodes string and updates the CANBus
 
         Args:
             nodes_str: String containing nodes informations
-        Returns:
-            List with all the node names
         """
         reg = re.search('BU_\s*:\s*(?P<nodes>.+)\s*', nodes_str)
         node_names_str = re.sub('\s+', ' ', reg.group('nodes')).strip()
@@ -81,12 +75,10 @@ class DBCParser(object):
             self._canbus.add_node(CANNode(node_name))
 
     def _parse_message(self, message_str):
-        """Parses a message string
+        """Parses a message string and updates the CANBus
 
         Args:
             message_str: String with message informations
-        Returns:
-            Namedtuple with can_id, name, length and sender name of the message
         """
         reg = re.search('BO_\s+(?P<can_id>\d+)\s+(?P<name>\S+)\s*:\s*(?P<length>\d+)\s+(?P<sender>\S+)', message_str)
         message = CANMessage(int(reg.group('can_id')), reg.group('name').strip(), int(reg.group('length')))
@@ -94,12 +86,12 @@ class DBCParser(object):
         self._mode = ('MESSAGE', message)
 
     def _parse_signal(self, signal_str):
-        """Parses a signal string
+        """Parses a signal string and updates the CANBus
 
         Args:
             signal_str: String with signal informations
-        Returns:
-            Namedtuple with the signal informations
+        Raises:
+            RuntimeError: If signal definition is not in a message block
         """
         if self._mode[0] != 'MESSAGE':
             raise RuntimeError('Signal description not in message block')
@@ -127,12 +119,10 @@ class DBCParser(object):
         self._mode[1].add_signal(signal)
 
     def _parse_description(self, desc_str):
-        """Parses a description string
+        """Parses a description string and updates the CANBus
 
         Args:
             desc_str: String with description informations
-        Returns:
-            Namedtuple with value, type and identifier of the description
         """
         pattern  = 'CM_\s+(?P<node>BU_)?(?P<msg>BO_)?(?P<sig>SG_)?\s*'
         pattern += '(?P<can_id>\d*)?\s*(?P<name>\S*)?\s*"(?P<value>.+)'
@@ -158,6 +148,11 @@ class DBCParser(object):
             self._mode = ('MULTILINE_DESCRIPTION', (desc_item, value + '\n'))
 
     def _parse_multiline_description(self, line):
+        """Parses the following lines of a multiline description and updates the CANBus
+
+        Args:
+            line: following lines of a multiline description
+        """
         if line.strip()[-2:] == '";':
             self._mode[1][0].description = self._mode[1][1] + line.replace('";', '')
             self._force_parser = False
@@ -166,12 +161,22 @@ class DBCParser(object):
             self._mode = (self._mode[0], (self._mode[1][0], self._mode[1][1] + line))
 
     def _parse_bus_configuration(self, bus_config_str):
+        """Parses a bus configuration string and updates the CANBus
+
+        Args:
+            bus_config_str: String with bus configuration definition
+        """
         pattern = 'BS_\s*:\s*(?P<speed>\d+)?\s*'
         reg = re.search(pattern, bus_config_str)
         if reg.group('speed'):
             self._canbus.speed = int(reg.group('speed'))
 
     def _parse_attribute_definition(self, attribute_definition_str):
+        """Parses a attribute definition string and updates the CANBus
+
+        Args:
+            attribute_definition_str: String with attribute definition definition
+        """
         pattern  = 'BA_DEF_\s+(?P<obj_type>\S+)?\s*"(?P<attr_name>\S+)"\s+'
         pattern += '(?P<attr_type>\S+)\s*(?P<attr_config>.+)?\s*;'
         reg = re.search(pattern, attribute_definition_str)
@@ -203,12 +208,22 @@ class DBCParser(object):
         self._canbus.add_attribute_definition(ad)
 
     def _parse_attribute_value(self, cad, attr_value_str):
+        """Parses a attribute value string and updates the CANBus
+
+        Args:
+            attr_value_str: String with attribute value
+        """
         if type(cad) == CANStringAttributeDefinition:
             reg_str = re.search('\s*"(?P<value>\S+)"\s*', attr_value_str)
             attr_value_str = reg_str.group('value')
         return attr_value_str
 
     def _parse_attribute_default_value(self, attr_default_str):
+        """Parses a attribute default value string and updates the CANBus
+
+        Args:
+            attr_default_str: String with attribute default value
+        """
         pattern = 'BA_DEF_DEF_\s+"(?P<attr_name>\S+)"\s+(?P<default>\S+)\s*;'
         reg = re.search(pattern, attr_default_str)
 
@@ -217,6 +232,11 @@ class DBCParser(object):
         cad.default = default_value
 
     def _parse_attribute(self, attribute_str):
+        """Parses a attribute string and updates the CANBus
+
+        Args:
+            attribute_str: String with attribute
+        """
         pattern  = 'BA_\s+"(?P<attr_name>\S+)"\s*(?P<node>BU_)?(?P<msg>BO_)?(?P<sig>SG_)?\s*'
         pattern += '(?P<can_id>\d*)?\s*(?P<name>\S*)?\s+(?P<value>\S+)\s*;'
         reg = re.search(pattern, attribute_str)
