@@ -1,9 +1,8 @@
 __author__ = "Stefan Hölzl"
 
 import re
-import collections
 
-from canpy.canbus import CANBus, CANNode, CANMessage, CANSignal
+from canpy.can_bus import CANBus, CANNode, CANMessage, CANSignal
 
 
 class DBCParser(object):

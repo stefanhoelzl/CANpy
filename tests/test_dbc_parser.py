@@ -2,7 +2,7 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.canbus import CANNode, CANMessage, CANSignal
+from canpy.can_bus import CANNode, CANMessage, CANSignal
 from canpy.parser.dbc_parser import DBCParser
 
 testset_nodes = ['BU_   :   Node0   Node1    Node2', 'BU_:Node0 Node1 Node2']

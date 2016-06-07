@@ -2,7 +2,7 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.canbus import CANBus, CANMessage, CANNode, CANSignal
+from canpy.can_bus import CANBus, CANMessage, CANNode, CANSignal
 
 class TestCANBus(object):
     def test_add_node(self):
