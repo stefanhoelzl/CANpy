@@ -1,10 +1,24 @@
 __author__ = "Stefan Hölzl"
 
-class CANBus(object):
+from canpy.can_bus.can_attribute import CANAttributeDefinitionsContainer
+
+class CANObject(object):
+    @property
+    def attributes(self):
+        if not '_attributes' in self.__dict__:
+            self._attributes = {}
+        return self._attributes
+
+    def add_attribute(self, attribute):
+        self.attributes[attribute.name] = attribute
+
+
+class CANBus(CANObject):
     """Representation of a CAN-Bus"""
     def __init__(self):
         """Initializes the object"""
         self._nodes = {}
+        self.attribute_definitions = CANAttributeDefinitionsContainer()
 
         self.version = ""
         self.description = ""
