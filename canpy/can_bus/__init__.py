@@ -9,4 +9,3 @@ from canpy.can_bus.can_attribute import CANEnumAttributeDefinition
 from canpy.can_bus.can_attribute import CANFloatAttributeDefinition
 from canpy.can_bus.can_attribute import CANIntAttributeDefinition
 from canpy.can_bus.can_attribute import CANAttribute
-from canpy.can_bus.can_attribute import CANAttributeDefinitionsContainer

@@ -197,4 +197,4 @@ class DBCParser(object):
             values = list(map(lambda val: val.replace('"', '').strip(), values))
             ad = CANEnumAttributeDefinition(reg.group('attr_name'), obj_type, values)
 
-        self._canbus.attribute_definitions.add_attribute_definition(ad)
+        self._canbus.add_attribute_definition(ad)

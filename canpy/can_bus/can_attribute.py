@@ -45,32 +45,6 @@ class CANAttribute(object):
             raise AttributeError('Attribute value not allowed')
 
 
-class CANAttributeDefinitionsContainer(object):
-    def __init__(self):
-        self._attribute_definitions = {}
-
-    # Method definitions
-    def add_attribute_definition(self, definition):
-        """Adds a new attribute definition
-
-        Args:
-            can_obj_type: type of the can object this attribute belongs to
-            definition:   attribute definition to add
-        """
-        self[definition.obj_type][definition.name] = definition
-
-    # Protocol definitions
-    def __getitem__(self, item):
-        if not item in self:
-            self._attribute_definitions[item] = {}
-        return self._attribute_definitions[item]
-
-    def __contains__(self, item):
-        if not item in self._attribute_definitions:
-            return False
-        return True
-
-
 class CANAttributeDefinition(object):
     def __init__(self, name, can_obj_type):
         self.name = name

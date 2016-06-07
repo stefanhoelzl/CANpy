@@ -49,6 +49,12 @@ class TestCANBus(object):
         cdb = CANBus()
         assert cdb.get_signal(can_id=1234, name='Signal') == None
 
+    def test_add_attribute_definition(self):
+        cb = CANBus()
+        cad = CANAttributeDefinition('Test', CANSignal)
+        cb.add_attribute_definition(cad)
+        assert 'Test' in cb.attribute_definitions
+
 
 class TestCANNode(object):
     def test_add_message(self):
@@ -250,11 +256,3 @@ class TestCANAttribute(object):
         with pytest.raises(AttributeError):
             ca.value = 10
         assert ca.value == 100
-
-class TestCANAttributeDefinitionsContainer(object):
-    def test_add_attribute_definition(self):
-        cadc = CANAttributeDefinitionsContainer()
-        cad = CANAttributeDefinition('Test', CANSignal)
-        cadc.add_attribute_definition(cad)
-        assert CANSignal in cadc
-        assert 'Test' in cadc[CANSignal]

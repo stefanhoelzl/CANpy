@@ -170,22 +170,22 @@ class TestDBCParsing(object):
         parser._parse_line(line)
         assert parser._canbus.speed == 500
 
-    @pytest.mark.parametrize('line,obj_type_expected,def_type_expected,check_config', [
-                                ('BA_DEF_ SG_ "SGEnumAttribute" ENUM "Val0", "Val1", "Val2" ;', CANSignal,
+    @pytest.mark.parametrize('line, obj_type_expected, def_name, def_type_expected, check_config', [
+                                ('BA_DEF_ SG_ "SGEnumAttribute" ENUM "Val0", "Val1", "Val2" ;', CANSignal, 'SGEnumAttribute',
                                     CANEnumAttributeDefinition, lambda ad: ad.values == ["Val0", "Val1", "Val2"]),
-                                ('BA_DEF_ "FloatAttribute" FLOAT 0 50.5;', CANBus,
+                                ('BA_DEF_ "FloatAttribute" FLOAT 0 50.5;', CANBus, 'FloatAttribute',
                                     CANFloatAttributeDefinition, lambda ad: ad.value_min == 0 and ad.value_max == 50.5),
-                                ('BA_DEF_ BO_ "BOStringAttribute" STRING;', CANMessage,
+                                ('BA_DEF_ BO_ "BOStringAttribute" STRING;', CANMessage, 'BOStringAttribute',
                                     CANStringAttributeDefinition, lambda ad: True),
-                                ('BA_DEF_ BU_ "BUIntAttribute" INT 0 100;', CANNode,
+                                ('BA_DEF_ BU_ "BUIntAttribute" INT 0 100;', CANNode, 'BUIntAttribute',
                                     CANIntAttributeDefinition, lambda ad: ad.value_min == 0 and ad.value_max == 100),
     ])
-    def test_parse_attribute_definition(self, line, obj_type_expected, def_type_expected, check_config):
+    def test_parse_attribute_definition(self, line, obj_type_expected, def_name,  def_type_expected, check_config):
         parser = DBCParser()
         parser._parse_line(line)
-        assert obj_type_expected in parser._canbus.attribute_definitions
-        assert len(parser._canbus.attribute_definitions[obj_type_expected]) == 1
-        ad = list(parser._canbus.attribute_definitions[obj_type_expected].values())[0]
+        assert def_name in parser._canbus.attribute_definitions
+        ad = parser._canbus.attribute_definitions[def_name]
+        assert ad.obj_type == obj_type_expected
         assert def_type_expected == type(ad)
         assert check_config(ad)
 

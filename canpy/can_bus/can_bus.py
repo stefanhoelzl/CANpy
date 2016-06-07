@@ -1,7 +1,5 @@
 __author__ = "Stefan Hölzl"
 
-from canpy.can_bus.can_attribute import CANAttributeDefinitionsContainer
-
 class CANObject(object):
     @property
     def attributes(self):
@@ -18,7 +16,7 @@ class CANBus(CANObject):
     def __init__(self):
         """Initializes the object"""
         self._nodes = {}
-        self.attribute_definitions = CANAttributeDefinitionsContainer()
+        self._attribute_definitions = {}
 
         self.version = ""
         self.description = ""
@@ -26,10 +24,22 @@ class CANBus(CANObject):
 
     # Property definitions
     @property
+    def attribute_definitions(self):
+        return self._attribute_definitions
+
+    @property
     def nodes(self):
         return self._nodes
 
     # Method definitions
+    def add_attribute_definition(self, definition):
+        """Adds a new attribute definition to the can bus
+
+        Args:
+            definition: attribute definitin to add
+        """
+        self._attribute_definitions[definition.name] = definition
+
     def add_node(self, node):
         """Adds a new Node to the CANDB
 
