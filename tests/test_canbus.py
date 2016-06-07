@@ -80,3 +80,72 @@ class TestCANSignal(object):
         sig = CANSignal('Signal', 0, 8)
         sig.add_receiver(node)
         assert len(sig.receiver) == 1
+
+    def test_raw_value_getter(self):
+        sig = CANSignal('Signal1', 0, 8)
+        sig._raw_value = 10
+        assert sig.raw_value == 10
+
+    def test_raw_value_setter_signing_exception(self):
+        sig = CANSignal('Signal', 0, 8)
+        sig.signed = False
+        sig.raw_value = 0
+        sig.raw_value = 10
+        with pytest.raises(AttributeError):
+            sig.raw_value = -1
+        sig.signed = True
+        sig.raw_value = -1
+
+    def test_raw_value_setter_exceed_length(self):
+        sig = CANSignal('Signal', 0, 3)
+        sig.raw_value = 7
+        assert sig.raw_value == 7
+        with pytest.raises(AttributeError):
+            sig.raw_value = 8
+        sig.signed = True
+        sig.raw_value = 3
+        assert sig.raw_value == 3
+        sig.raw_value = -3
+        assert sig.raw_value == -3
+        with pytest.raises(AttributeError):
+            sig.raw_value = 4
+        assert sig.raw_value == -3
+        with pytest.raises(AttributeError):
+            sig.raw_value = -4
+        assert sig.raw_value == -3
+
+    def test_raw_value_setter_only_int(self):
+        sig = CANSignal('Signal', 0, 3)
+        with pytest.raises(AttributeError):
+            sig.raw_value = None
+        with pytest.raises(AttributeError):
+            sig.raw_value = 'a'
+
+    def test_value_getter(self):
+        sig = CANSignal('Signal', 0, 8)
+        sig.factor = 2.5
+        sig.offset = 1.25
+        sig.raw_value = 2
+        assert sig.value == sig.raw_value*2.5 + 1.25
+
+    def test_value_setter_raw_value(self):
+        sig = CANSignal('Signal', 0, 8)
+        sig.value = 10
+        assert sig.raw_value == 10
+
+    def test_value_setter_raw_value_conversion(self):
+        sig = CANSignal('Signal', 0, 8)
+        sig.factor = 2.5
+        sig.offset = 1.25
+        sig.value = 11.25
+        assert sig.raw_value == 4
+
+    def test_value_setter_min_max(self):
+        sig = CANSignal('Signal', 0, 8)
+        sig.value_min = 4
+        sig.value_max = 8
+        sig.value = 3.9
+        assert sig.value == 4
+        sig.value = 8.1
+        assert sig.value == 8
+

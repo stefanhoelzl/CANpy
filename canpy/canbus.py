@@ -140,12 +140,29 @@ class CANSignal(object):
     """Represents a CAN-Signal"""
     def __init__(self, name, start_bit, length, little_endian=True, signed=False, factor=1.0, offset=0.0, value_min=0,
                  value_max=0, unit="", is_multiplexer=False, multiplexer_id=None):
+        """Initializes the object
+
+        Args:
+            name:           Name of the signal
+            start_bit:      Start bit of the signal
+            length:         Length of the signal in bits
+            little_endian:  True if data is in little-endian format (default: True)
+            signed:         True if the value is signed (default: False)
+            factor:         Factor to calculate the signal value (default: 1)
+            offset:         Offset to calculate the signal value (default: 0)
+            value_min:      Minimum value of the signal (default: 0)
+            value_max:      Maximum value of the signal (default: 0)
+            unit:           Unit of the signal value (default: "")
+            is_multiplexer: True if message is a multiplexer (default: False)
+            multiplexer_id: Multiplexer ID if this message is multiplexed (default: None)
+        """
         self._receiver = []
+        self._raw_value = 0
 
         self.name = name
         self.start_bit = start_bit
         self.length = length
-        self.little_endian  = little_endian
+        self.little_endian = little_endian
         self.signed = signed
         self.factor = factor
         self.offset = offset
@@ -162,6 +179,54 @@ class CANSignal(object):
     @property
     def receiver(self):
         return self._receiver
+
+    @property
+    def raw_value(self):
+        return self._raw_value
+
+    @raw_value.setter
+    def raw_value(self, value):
+        """Sets the raw value and checks for length, sign and type
+
+        Args:
+            value: New raw value
+        Raises:
+            AttributeError: If value cant be converted to an int
+            AttributeError: If value is signed, but signal is unsigned
+            AttributeError: If value exceeds signal length
+        """
+        try:
+            value = int(value)
+        except:
+            raise AttributeError('Cant convert to int')
+        if not self.signed and value < 0:
+            raise AttributeError('Signed value not allowed')
+
+        usable_length = self.length if not self.signed else self.length-1
+        if 2**usable_length <= abs(value):
+            raise AttributeError('Value exceeds signal length')
+        self._raw_value = value
+
+    @property
+    def value(self):
+        """Converts the raw value to the actual value
+
+        Returns:
+            converted raw value
+        """
+        return self.raw_value*self.factor + self.offset
+
+    @value.setter
+    def value(self, value):
+        """Sets the raw_value by converting the given value and limits the value to min/max of the signal
+
+        Args:
+            value: value to convert and save as raw_value
+        """
+        if self.value_min != 0 and self.value_max != 0:
+            value = max(value, self.value_min)
+            value = min(value, self.value_max)
+        self.raw_value = int( (value-self.offset)/self.factor )
 
     # Method definitions
     def add_receiver(self, node):
