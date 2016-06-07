@@ -1,5 +1,6 @@
 __author__ = "Stefan Hölzl"
 
+from canpy.bit_array import BitArray
 
 class CANBus(object):
     """Representation of a CAN-Bus"""
@@ -227,6 +228,23 @@ class CANSignal(object):
             value = max(value, self.value_min)
             value = min(value, self.value_max)
         self.raw_value = int( (value-self.offset)/self.factor )
+
+    @property
+    def bits(self):
+        """Converts the raw_value to a bit array
+
+        Returns:
+            Bit array representing the raw value
+        """
+        return BitArray(self.length, value=self.raw_value, little_endian=self.little_endian, signed=self.signed)
+
+    @bits.setter
+    def bits(self, value):
+        """Sets the raw_value with value coresponding the given value
+        Args:
+            value: bit array
+        """
+        self.raw_value = int(value)
 
     # Method definitions
     def add_receiver(self, node):
