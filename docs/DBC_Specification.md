@@ -1,17 +1,21 @@
+# Scope
+This document specifies how DBC files are handled by [CANpy](https://github.com/stefanhoelzl/CANpy)  
+This document doesn't claim to specifiy the complete [Vector DBC standard](http://vector.com/vi_candb_en.html)  
+
 # Format description
 `<...>`: Required field  
 `[...]`: Optional field  
 `  |  `: Or (eg. <A|B>)  
 
-# Keywords
-## Version
+# Supported Keywords
+## VERSION
 Version identifier of the DBC file.  
 Format: `VERSION "<VersionIdentifier>"`  
 
 ## BS_
 Bus configuration.  
 Format:: `BS_: <Speed>`  
-Speed in kbit/s  
+Speed in kBit/s  
 
 ## BU_
 List of all CAN-Nodes, seperated by whitespaces.  
