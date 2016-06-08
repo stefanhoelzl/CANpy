@@ -35,25 +35,17 @@ class TestBitArray(object):
         ba[1] = 1
         assert str(ba) == '11000'
 
-    def test_set(self):
-        ba = BitArray(5)
-        ba.set(5)
-        assert ba._list == [True, False, True, False, False]
-
-    def test_set_signed(self):
-        ba = BitArray(5, signed=True, little_endian=True)
-        ba.set(-5)
-        assert ba._list == [True, False, True, False, True]
-
-    def test_set_big_endian(self):
-        ba = BitArray(5, signed=False, little_endian=False)
-        ba.set(5)
-        assert ba._list == [False, False, True, False, True]
-
-    def test_set_signed_big_endian(self):
-        ba = BitArray(5, signed=True, little_endian=False)
-        ba.set(-5)
-        assert ba._list == [True, False, True, False, True]
+    @pytest.mark.parametrize('size, signed, little_endian, set, expected_list', [
+        (5, False, True, 5, [True, False, True, False, False]),
+        (5, True, True, 5, [True, False, True, False, False]),
+        (5, False, False, 5, [False, False, True, False, True]),
+        (5, True, False, -5, [True, False, True, False, True]),
+        (2, False, True, 5, [False, True])
+    ])
+    def test_set(self, size, signed, little_endian, set, expected_list):
+        ba = BitArray(size=size, signed=signed, little_endian=little_endian)
+        ba.set(set)
+        assert ba._list == expected_list
 
     def test_int_little_endian(self):
         ba = BitArray(5, value=19, little_endian=True, signed=False)

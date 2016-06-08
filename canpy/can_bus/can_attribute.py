@@ -90,7 +90,6 @@ class CANEnumAttributeDefinition(CANAttributeDefinition):
             return False
         if value in self.values:
             return True
-        return False
 
     def cast(self, value):
         value = int(value)

@@ -11,7 +11,7 @@ class BitArray(object):
         self._list = [False for _ in range(len(self))]
         value_str = bin(abs(value)).replace('0b', '')
 
-        offset = len(self) - (len(value_str) if not self.signed else len(value_str)+1)
+        offset = max(0, len(self) - (len(value_str) if not self.signed else len(value_str)+1))
         for bit, val in enumerate(value_str):
             bit = bit if not self.signed else bit+1
             bit += offset

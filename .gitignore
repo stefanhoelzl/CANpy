@@ -1,4 +1,5 @@
 .idea
 *.pyc
 .cache
-
+.coverage*
+tests/coverage

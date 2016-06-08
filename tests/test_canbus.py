@@ -4,6 +4,7 @@ import pytest
 
 from canpy.can_bus import CANBus, CANMessage, CANNode, CANSignal, CANObject
 from canpy.can_bus.can_attribute import *
+from canpy.bit_array import BitArray
 
 class TestCANObject(object):
     def test_add_attribute(self):
@@ -44,6 +45,15 @@ class TestCANBus(object):
         msg.add_signal(sig)
         cdb.add_node(node)
         assert cdb.get_signal(can_id=1234, name='Signal') == sig
+
+    def test_get_none_signal_with_message(self):
+        cdb = CANBus()
+        node = CANNode('TestNode')
+        msg = CANMessage(1234, 'Message', 8)
+        node.add_message(msg)
+        sig = CANSignal('Signal', 0, 8)
+        cdb.add_node(node)
+        assert cdb.get_signal(can_id=1234, name='Signal') == None
 
     def test_get_none_signal(self):
         cdb = CANBus()
@@ -123,6 +133,11 @@ class TestCANSignal(object):
         sig._raw_value = 10
         assert sig.raw_value == 10
 
+    def test_int_repr(self):
+        sig = CANSignal('Signal1', 0, 8)
+        sig._raw_value = 10
+        assert int(sig) == 10
+
     def test_raw_value_setter_signing_exception(self):
         sig = CANSignal('Signal', 0, 8)
         sig.signed = False
@@ -186,11 +201,25 @@ class TestCANSignal(object):
         sig.value = 8.1
         assert sig.value == 8
 
+    def test_bits_setter(self):
+        sig = CANSignal('Signal', 0, 8)
+        ba = BitArray(size=8, value=200)
+        sig.bits = ba
+        assert sig.raw_value == 200
+
 class TestCANAttributeDefinitions(object):
+    def test_check(self):
+        cad = CANAttributeDefinition('CANAttribute', CANObject)
+        assert cad.check_value(None) == True
+
     def test_string_check(self):
+        class NoStr(object):
+            def __str__(self):
+                raise NotImplementedError()
         cad = CANStringAttributeDefinition('StringAttribute', CANObject)
         assert cad.name == 'StringAttribute'
         assert cad.check_value('String Value') == True
+        assert cad.check_value(NoStr()) == False
 
     def test_float_check(self):
         cad = CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5)
