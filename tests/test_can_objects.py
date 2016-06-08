@@ -2,8 +2,8 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.can_bus import CANBus, CANMessage, CANNode, CANSignal, CANObject
-from canpy.can_bus.can_attribute import *
+from canpy.can_objects import CANNetwork, CANMessage, CANNode, CANSignal, CANObject
+from canpy.can_objects.can_attribute import *
 from canpy.bit_array import BitArray
 
 class TestCANObject(object):
@@ -12,61 +12,61 @@ class TestCANObject(object):
         co.add_attribute(CANAttribute(CANAttributeDefinition('Attribute', CANObject)))
         assert 'Attribute' in co.attributes
 
-class TestCANBus(object):
+class TestCANNetwork(object):
     def test_add_node(self):
-        cdb = CANBus()
-        cdb.add_node(CANNode('TestNode'))
-        assert 'TestNode' in cdb.nodes
+        cn = CANNetwork()
+        cn.add_node(CANNode('TestNode'))
+        assert 'TestNode' in cn.nodes
 
     def test_get_node(self):
-        cdb = CANBus()
+        cn = CANNetwork()
         node = CANNode('TestNode')
-        cdb.add_node(node)
-        assert cdb.nodes['TestNode'] == node
+        cn.add_node(node)
+        assert cn.nodes['TestNode'] == node
 
     def test_get_message(self):
-        cdb = CANBus()
+        cn = CANNetwork()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)
-        cdb.add_node(node)
-        assert cdb.get_message(can_id=1234) == msg
+        cn.add_node(node)
+        assert cn.get_message(can_id=1234) == msg
 
     def test_get_none_message(self):
-        cdb = CANBus()
-        assert cdb.get_message(can_id=1234) == None
+        cn = CANNetwork()
+        assert cn.get_message(can_id=1234) == None
 
     def test_get_signal(self):
-        cdb = CANBus()
+        cn = CANNetwork()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)
         sig = CANSignal('Signal', 0, 8)
         msg.add_signal(sig)
-        cdb.add_node(node)
-        assert cdb.get_signal(can_id=1234, name='Signal') == sig
+        cn.add_node(node)
+        assert cn.get_signal(can_id=1234, name='Signal') == sig
 
     def test_get_none_signal_with_message(self):
-        cdb = CANBus()
+        cn = CANNetwork()
         node = CANNode('TestNode')
         msg = CANMessage(1234, 'Message', 8)
         node.add_message(msg)
         sig = CANSignal('Signal', 0, 8)
-        cdb.add_node(node)
-        assert cdb.get_signal(can_id=1234, name='Signal') == None
+        cn.add_node(node)
+        assert cn.get_signal(can_id=1234, name='Signal') == None
 
     def test_get_none_signal(self):
-        cdb = CANBus()
-        assert cdb.get_signal(can_id=1234, name='Signal') == None
+        cn = CANNetwork()
+        assert cn.get_signal(can_id=1234, name='Signal') == None
 
     def test_add_attribute_definition(self):
-        cb = CANBus()
+        cb = CANNetwork()
         cad = CANAttributeDefinition('Test', CANSignal)
         cb.add_attribute_definition(cad)
         assert 'Test' in cb.attribute_definitions
 
     def test_add_value_dict(self):
-        cb = CANBus()
+        cb = CANNetwork()
         value_dict = {0: 'Val0'}
         cb.add_value_dict('ValueDict', value_dict)
         assert len(cb.value_dicts) == 1

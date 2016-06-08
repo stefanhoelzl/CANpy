@@ -1,6 +1,6 @@
 __author__ = "Stefan Hölzl"
 
-from canpy.can_bus.can_bus import CANObject
+from canpy.can_objects.can_network import CANObject
 
 class CANNode(CANObject):
     """Representation of a CAN-Node"""

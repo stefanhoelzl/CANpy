@@ -12,8 +12,8 @@ class CANObject(object):
         self.attributes[attribute.name] = attribute
 
 
-class CANBus(CANObject):
-    """Representation of a CAN-Bus"""
+class CANNetwork(CANObject):
+    """Representation of a CAN-Network"""
     def __init__(self):
         """Initializes the object"""
         self._nodes = {}
@@ -39,7 +39,7 @@ class CANBus(CANObject):
 
     # Method definitions
     def add_value_dict(self, name, value_dict):
-        """Adds a new value dictionary to the can bus
+        """Adds a new value dictionary to the can network
 
         Args:
             name:       Name of the value dict
@@ -48,7 +48,7 @@ class CANBus(CANObject):
         self._value_dicts[name] = value_dict
 
     def add_attribute_definition(self, definition):
-        """Adds a new attribute definition to the can bus
+        """Adds a new attribute definition to the can network
 
         Args:
             definition: attribute definitin to add

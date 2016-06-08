@@ -2,8 +2,8 @@ __author__ = "Stefan Hölzl"
 
 import re
 
-from canpy.can_bus import CANBus, CANNode, CANMessage, CANSignal
-from canpy.can_bus.can_attribute import *
+from canpy.can_objects import CANNetwork, CANNode, CANMessage, CANSignal
+from canpy.can_objects.can_attribute import *
 
 
 class DBCParser(object):
@@ -12,7 +12,7 @@ class DBCParser(object):
     def __init__(self):
         """Initializes the object"""
         self._mode = ('NORMAL', None)
-        self._canbus = CANBus()
+        self._canbus = CANNetwork()
 
         self._keywords = {'VERSION':      self._parse_version,
                           'BU_':          self._parse_nodes,
@@ -37,7 +37,7 @@ class DBCParser(object):
         Returns:
             CANBus object
         """
-        self._canbus = CANBus()
+        self._canbus = CANNetwork()
         with open(file_name, 'r') as dbc_fh:
             for line in dbc_fh:
                 self._parse_line(line.strip())
@@ -183,7 +183,7 @@ class DBCParser(object):
         pattern += '(?P<attr_type>\S+)\s*(?P<attr_config>.+)?\s*;'
         reg = re.search(pattern, attribute_definition_str)
 
-        obj_type = CANBus
+        obj_type = CANNetwork
         if 'BU_' in reg.groups():
             obj_type = CANNode
         elif 'BO_' in reg.groups():

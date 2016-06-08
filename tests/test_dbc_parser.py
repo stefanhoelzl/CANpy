@@ -2,8 +2,8 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.can_bus import CANNode, CANMessage, CANSignal, CANBus
-from canpy.can_bus.can_attribute import *
+from canpy.can_objects import CANNode, CANMessage, CANSignal, CANNetwork
+from canpy.can_objects.can_attribute import *
 from canpy.parser.dbc_parser import DBCParser
 
 class TestDBCParsing(object):
@@ -154,8 +154,8 @@ class TestDBCParsing(object):
     @pytest.mark.parametrize('line, obj_type_expected, def_name, def_type_expected, check_config', [
                                 ('BA_DEF_ SG_ "SGEnumAttribute" ENUM "Val0", "Val1", "Val2" ;', CANSignal, 'SGEnumAttribute',
                                     CANEnumAttributeDefinition, lambda ad: ad.values == ["Val0", "Val1", "Val2"]),
-                                ('BA_DEF_ "FloatAttribute" FLOAT 0 50.5;', CANBus, 'FloatAttribute',
-                                    CANFloatAttributeDefinition, lambda ad: ad.value_min == 0 and ad.value_max == 50.5),
+                                ('BA_DEF_ "FloatAttribute" FLOAT 0 50.5;', CANNetwork, 'FloatAttribute',
+                                 CANFloatAttributeDefinition, lambda ad: ad.value_min == 0 and ad.value_max == 50.5),
                                 ('BA_DEF_ BO_ "BOStringAttribute" STRING;', CANMessage, 'BOStringAttribute',
                                     CANStringAttributeDefinition, lambda ad: True),
                                 ('BA_DEF_ BU_ "BUIntAttribute" INT 0 100;', CANNode, 'BUIntAttribute',
@@ -186,7 +186,7 @@ class TestDBCParsing(object):
         assert attr_def.default == default_value_expected
 
     @pytest.mark.parametrize('line, expected_value, attr_definition, cfg_dict', [
-        ('BA_ "FloatAttribute" 100.5;', 100.5, CANFloatAttributeDefinition('FloatAttribute', CANBus, 99, 101), {}),
+        ('BA_ "FloatAttribute" 100.5;', 100.5, CANFloatAttributeDefinition('FloatAttribute', CANNetwork, 99, 101), {}),
         ('BA_ "BUIntAttribute" BU_ Node0 100;', 100,
             CANIntAttributeDefinition('BUIntAttribute', CANNode, 99, 101), {'NODE': 'Node0'}),
         ('BA_ "BOStringAttribute" BO_ 1234 "MessageAttribute";', "MessageAttribute",
@@ -199,7 +199,7 @@ class TestDBCParsing(object):
         parser = DBCParser()
         parser._canbus.add_attribute_definition(attr_definition)
 
-        if attr_definition.obj_type == CANBus:
+        if attr_definition.obj_type == CANNetwork:
             can_object = parser._canbus
         if attr_definition.obj_type in [CANNode, CANMessage, CANSignal]:
             cfg_dict['NODE'] = CANNode(cfg_dict['NODE'])

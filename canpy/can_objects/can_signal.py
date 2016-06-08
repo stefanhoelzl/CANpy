@@ -1,7 +1,7 @@
 __author__ = "Stefan Hölzl"
 
 from canpy.bit_array import BitArray
-from canpy.can_bus.can_bus import CANObject
+from canpy.can_objects.can_network import CANObject
 
 class CANSignal(CANObject):
     """Represents a CAN-Signal"""
