@@ -54,7 +54,7 @@ Attribute default value
 Format: `BA_DEF_DEF_ "<AttributeName>" ["]<DefaultValue>["];`
 
 ## BA_
-Attribute-  
+Attribute  
 Format: `BA_ "<AttributeName>" [BU_|BO_|SG_] [Node|CAN-ID] [SignalName] <AttributeValue>;`
 
 ## VAL_
@@ -66,7 +66,50 @@ Value table definition for signals.
 Format: `VAL_TABLE_ <ValueTableName> <ValueTableDefinition>;`  
 ValueTableDefinition: List of `IntValue "StringValue"` Pairs, seperated by whitespaces
 
+# Attributes
+In this sections are standard attributes used by [CANpy](https://github.com/stefanhoelzl/CANpy) defined. The attributes can be overwritten within a DBC file.
+## Message Attributes
+
+### GenMsgSendType
+Defines the send type of a message.  
+Supported types:  
+* cyclic  
+* triggered  
+* cyclicIfActive  
+* cyclicAndTriggered  
+* cyclicIfActiveAndTriggered  
+* none  
+Definition: `BA_DEF BO_ "GenMsgSendType" ENUM "cyclic","triggered","cyclicIfActive","cyclicAndTriggered","cyclicIfActiveAndTriggered","none"`  
+Default: none
+Definition: `BA_DEF_DEF "GenMsgCycleTime" "none"`
+
+### GenMsgCycleTime
+Defines the cycle time of a message in ms.  
+Definition: `BA_DEF BO_ "GenMsgCycleTime" INT 0 0`  
+Default: 0  
+Definition: `BA_DEF_DEF "GenMsgCycleTime" 0`  
+
+### GenMsgStartDelayTime
+Defines the allowed delay after startup this message must occure the first time in ms.  
+Definition: `BA_DEF BO_ "GenMsgStartDelayTime" INT 0 0`  
+Default: 0 (=GenMsgCycleTime)  
+Definition: `BA_DEF_DEF "GenMsgStartDelayTime" 0`  
+
+### GenMsgDelayTime
+Defines the allowed delay for a message in ms.  
+Definition: `BA_DEF BO_ "GenMsgDelayTime" INT 0 0`  
+Default: 0  
+Definition: `BA_DEF_DEF "GenMsgDelayTime" 0`  
+
+## Signal Attributes
+### GenSigStartValue
+Defines the value as long as no value is set/received for this signal.  
+Definition: `BA_DEF SG_ "GenSigStartValue" INT 0 0`  
+Default: 0  
+Definition: `BA_DEF_DEF "GenSigStartValue" 0`  
+
 # Sources
 http://pisnoop.s3.amazonaws.com/snoop_help_dbc.htm  
 http://www.racelogic.co.uk/_downloads/vbox/Application_Notes/CAN%20Format%20for%20VBOXII%20and%20PRO%20v4.pdf  
-https://hackage.haskell.org/package/ecu-0.0.8/src/src/j1939_utf8.dbc
+https://hackage.haskell.org/package/ecu-0.0.8/src/src/j1939_utf8.dbc  
+http://www.ingenieurbuerobecker.de/downloads/CANtool_Manual.pdf  
