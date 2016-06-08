@@ -21,8 +21,10 @@ class DBCParser(object):
                           'CM_ ':         self._parse_description,
                           'BS_':          self._parse_bus_configuration,
                           'BA_DEF_ ':     self._parse_attribute_definition,
-                          'BA_DEF_DEF_ ': self._parse_attribute_default_value,
+                          'BA_DEF_DEF_':  self._parse_attribute_default_value,
                           'BA_ ':         self._parse_attribute,
+                          'VAL_TABLE_':   self._parse_val_table,
+                          'VAL_ ':        self._parse_signal_value_dict
                          }
         self._force_parser = False
 
@@ -208,10 +210,12 @@ class DBCParser(object):
         self._canbus.add_attribute_definition(ad)
 
     def _parse_attribute_value(self, cad, attr_value_str):
-        """Parses a attribute value string and updates the CANBus
+        """Parses a attribute value string
 
         Args:
             attr_value_str: String with attribute value
+        Returns:
+            Parse attribute value
         """
         if type(cad) == CANStringAttributeDefinition:
             reg_str = re.search('\s*"(?P<value>\S+)"\s*', attr_value_str)
@@ -251,3 +255,48 @@ class DBCParser(object):
 
         cad = self._canbus.attribute_definitions[reg.group('attr_name')]
         can_object.add_attribute(CANAttribute(cad, value=self._parse_attribute_value(cad, reg.group('value'))))
+
+    def _parse_val_table_def(self, val_table_def_str):
+        """Parses a val table definition string and updates the CANBus
+
+        Args:
+            val_table_str: String with val table value definition
+        Returns:
+            Dict representing the val table
+        """
+        value_dict = {}
+        parts = re.split('\s+', val_table_def_str)
+        for i in range(0, len(parts), 2):
+            value_dict[int(parts[i])] = parts[i+1].replace('"', '')
+
+        return value_dict
+
+    def _parse_val_table(self, val_table_str):
+        """Parses a val table string and updates the CANBus
+
+        Args:
+            val_table_str: String with val table definition
+        """
+        pattern = 'VAL_TABLE_\s+(?P<name>\S+)\s+(?P<val_table_def>.+)\s*;'
+        reg = re.search(pattern, val_table_str)
+        value_dict = self._parse_val_table_def(reg.group('val_table_def'))
+        self._canbus.add_value_dict(reg.group('name'), value_dict)
+
+    def _parse_signal_value_dict(self, sig_val_dict_str):
+        """Parses a val string and updates the CANBus
+
+        Args:
+            sig_val_dict_str: String with val definition
+        """
+        pattern = 'VAL_\s+(?P<can_id>\d+)\s+(?P<signal_name>\S+)\s+(?P<val_table_def>.+)\s*;'
+        reg = re.search(pattern, sig_val_dict_str)
+
+        value_dict = None
+
+        if re.search('\s+', reg.group('val_table_def')):
+            value_dict = self._parse_val_table_def(reg.group('val_table_def'))
+        else:
+            value_dict = self._canbus.value_dicts[reg.group('val_table_def')]
+
+        self._canbus.get_signal(int(reg.group('can_id')), reg.group('signal_name')).value_dict = value_dict
+

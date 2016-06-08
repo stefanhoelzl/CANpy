@@ -217,6 +217,35 @@ class TestDBCParsing(object):
         parser._parse_line(line)
         assert can_object.attributes[attr_definition.name].value == expected_value
 
+    @pytest.mark.parametrize('line, expected_name, expected_dict', [
+        ('VAL_TABLE_ Numbers 3 "Three" 2 "Two" 1 "One" 0 "Zero";', 'Numbers', {3: 'Three', 2: 'Two', 1: 'One', 0: 'Zero'}),
+    ])
+    def test_parse_val_table(self, line, expected_name, expected_dict):
+        parser = DBCParser()
+        parser._parse_line(line)
+        assert len(parser._canbus.value_dicts) == 1
+        assert expected_name in parser._canbus.value_dicts
+        assert parser._canbus.value_dicts[expected_name] == expected_dict
+
+    @pytest.mark.parametrize('line, msg_id, signal_name, expected_dict, val_table_name', [
+        ('VAL_ 1234 Signal0 2 "Value2" 1 "Value1" 0 "Value0";', 1234, 'Signal0', {2: 'Value2', 1: 'Value1', 0: 'Value0'}, None),
+        ('VAL_ 4321 Signal1 Numbers;', 4321, 'Signal1', {3: 'Three', 2: 'Two', 1: 'One', 0: 'Zero'}, 'Numbers'),
+    ])
+    def test_parse_val(self, line, msg_id, signal_name, expected_dict, val_table_name):
+        parser = DBCParser()
+        if val_table_name:
+            parser._canbus.add_value_dict(val_table_name, expected_dict)
+
+        node = CANNode('Node')
+        parser._canbus.add_node(node)
+        msg = CANMessage(msg_id, 'Message', 1)
+        node.add_message(msg)
+        sig = CANSignal(signal_name, 0, 8)
+        msg.add_signal(sig)
+
+        parser._parse_line(line)
+
+        assert sig.value_dict == expected_dict
 
 def test_whole_dbc():
     parser = DBCParser()
