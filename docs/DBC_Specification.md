@@ -50,8 +50,17 @@ Attribute default value
 Format: `BA_DEF_DEF_ "<AttributeName>" ["]<DefaultValue>["];`
 
 ## BA_
-Attribute  
+Attribute-  
 Format: `BA_ "<AttributeName>" [BU_|BO_|SG_] [Node|CAN-ID] [SignalName] <AttributeValue>;`
+
+## VAL_
+Value definitions for signals.  
+Format: `VAL_ <CAN-ID> <SignalsName> <ValTableName|ValTableDefinition>;`
+
+## VAL_TABLE_
+Value table definition for signals.  
+Format: `VAL_TABLE_ <ValueTableName> <ValueTableDefinition>;`  
+ValueTableDefinition: List of `IntValue "StringValue"` Pairs, seperated by whitespaces
 
 # Sources
 http://pisnoop.s3.amazonaws.com/snoop_help_dbc.htm  
