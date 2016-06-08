@@ -109,7 +109,7 @@ class CANFloatAttributeDefinition(CANAttributeDefinition):
             value = self.cast(value)
         except:
             return False
-        if self.value_min <= value <= self.value_max:
+        if self.value_min <= value <= self.value_max or self.value_min == 0 == self.value_max:
             return True
         return False
 
