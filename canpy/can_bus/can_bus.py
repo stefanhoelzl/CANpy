@@ -17,6 +17,7 @@ class CANBus(CANObject):
         """Initializes the object"""
         self._nodes = {}
         self._attribute_definitions = {}
+        self._value_dicts = {}
 
         self.version = ""
         self.description = ""
@@ -31,7 +32,20 @@ class CANBus(CANObject):
     def nodes(self):
         return self._nodes
 
+    @property
+    def value_dicts(self):
+        return self._value_dicts
+
     # Method definitions
+    def add_value_dict(self, name, value_dict):
+        """Adds a new value dictionary to the can bus
+
+        Args:
+            name:       Name of the value dict
+            value_dict: dictionary to add
+        """
+        self._value_dicts[name] = value_dict
+
     def add_attribute_definition(self, definition):
         """Adds a new attribute definition to the can bus
 

@@ -65,6 +65,13 @@ class TestCANBus(object):
         cb.add_attribute_definition(cad)
         assert 'Test' in cb.attribute_definitions
 
+    def test_add_value_dict(self):
+        cb = CANBus()
+        value_dict = {0: 'Val0'}
+        cb.add_value_dict('ValueDict', value_dict)
+        assert len(cb.value_dicts) == 1
+        assert 'ValueDict' in cb.value_dicts
+
 
 class TestCANNode(object):
     def test_add_message(self):
@@ -206,6 +213,14 @@ class TestCANSignal(object):
         ba = BitArray(size=8, value=200)
         sig.bits = ba
         assert sig.raw_value == 200
+
+    def test_value_dict(self):
+        sig = CANSignal('Signal', 0, 8)
+        sig.value_dict = {0: 'Value0'}
+        sig.raw_value = 0
+        assert sig.value == sig.value_dict[sig.raw_value]
+        sig.raw_value = 1
+        assert sig.value == sig.raw_value
 
 class TestCANAttributeDefinitions(object):
     def test_check(self):

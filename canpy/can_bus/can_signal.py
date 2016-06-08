@@ -41,6 +41,7 @@ class CANSignal(CANObject):
 
         self.message = None
         self.description = ""
+        self.value_dict = None
 
     # Property definitions
     @property
@@ -81,6 +82,8 @@ class CANSignal(CANObject):
         Returns:
             converted raw value
         """
+        if self.value_dict and self.raw_value in self.value_dict.keys():
+            return self.value_dict[self.raw_value]
         return self.raw_value*self.factor + self.offset
 
     @value.setter
