@@ -1,6 +1,7 @@
 __author__ = "Stefan Hölzl"
 
 class CANObject(object):
+    """Provides basic functionality for CAN-Objects"""
     @property
     def attributes(self):
         if not '_attributes' in self.__dict__:

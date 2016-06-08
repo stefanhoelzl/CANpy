@@ -1,13 +1,27 @@
 __author__ = "Stefan Hölzl"
 
 class BitArray(object):
+    """Representation of a number as list of bits"""
     def __init__(self, size, value=0, little_endian=True, signed=False):
+        """Initializes the BitArray
+
+        Args:
+            size:          Size of the bit array
+            value:         Value which should be represented
+            little_endian: If True the number is represented in little endian bit order else big endian
+            signed:        If True the bit array can represent signed numbers
+        """
         self.signed = signed
         self.little_endian = little_endian
         self._list = [False for _ in range(size)]
         self.set(value)
 
     def set(self, value):
+        """Sets an integer value to the bit array
+
+        Args:
+            value: integer value to save
+        """
         self._list = [False for _ in range(len(self))]
         value_str = bin(abs(value)).replace('0b', '')
 
