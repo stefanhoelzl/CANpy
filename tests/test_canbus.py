@@ -223,50 +223,49 @@ class TestCANSignal(object):
         assert sig.value == sig.raw_value
 
 class TestCANAttributeDefinitions(object):
-    def test_check(self):
-        cad = CANAttributeDefinition('CANAttribute', CANObject)
-        assert cad.check_value(None) == True
-
-    def test_string_check(self):
-        class NoStr(object):
+    class NoStr(object):
             def __str__(self):
                 raise NotImplementedError()
-        cad = CANStringAttributeDefinition('StringAttribute', CANObject)
-        assert cad.name == 'StringAttribute'
-        assert cad.check_value('String Value') == True
-        assert cad.check_value(NoStr()) == False
 
-    def test_float_check(self):
-        cad = CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5)
-        assert cad.name == "FloatAttribute"
-        assert cad.check_value(1.5) == True
-        assert cad.check_value(-1.5) == True
-        assert cad.check_value(-1) == True
-        assert cad.check_value(1) == True
-        assert cad.check_value(1.6) == False
-        assert cad.check_value(-1.6) == False
-        assert cad.check_value('abc') == False
+    @pytest.mark.parametrize('attr_definition, expected_name, test_value, expected_result', [
+        (CANAttributeDefinition('CANAttribute', CANObject), 'CANAttribute', None, True),
+        (CANStringAttributeDefinition('StringAttribute', CANObject), 'StringAttribute', 'String', True),
+        (CANStringAttributeDefinition('StringAttribute', CANObject), 'StringAttribute', NoStr(), False),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', 1.5, True),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', -1.5, True),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', 1, True),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', -1, True),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', 0, True),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', 1.6, False),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', -1.6, False),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, -1.5, 1.5), 'FloatAttribute', 'abc', False),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, 0, 0), 'FloatAttribute', 100, True),
+        (CANFloatAttributeDefinition('FloatAttribute', CANObject, 0, 0), 'FloatAttribute', -100, True),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', 2, True),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', -2, True),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', -1, True),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', 1, True),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', 0, True),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', -2.1, False),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', -2.2, False),
+        (CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2), 'IntAttribute', 'abc', False),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', 0, True),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', 1, True),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', 2, True),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', 3, True),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', -1, False),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', 4, False),
+    ])
+    def test_check(self, attr_definition, expected_name, test_value, expected_result):
+        assert attr_definition.name == expected_name
+        assert attr_definition.check_value(test_value) == expected_result
 
-    def test_int_check(self):
-        cad = CANIntAttributeDefinition('IntAttribute', CANObject, -2, 2)
-        assert cad.name == "IntAttribute"
-        assert cad.check_value(2) == True
-        assert cad.check_value(-2) == True
-        assert cad.check_value(-1) == True
-        assert cad.check_value(1) == True
-        assert cad.check_value(2.1) == False
-        assert cad.check_value(-2.1) == False
-        assert cad.check_value('abc') == False
-
-    def test_enum_check(self):
-        cad = CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3'])
-        assert cad.name == 'EnumAttribute'
-        assert cad.check_value(0) == True
-        assert cad.check_value(1) == True
-        assert cad.check_value(2) == True
-        assert cad.check_value(3) == True
-        assert cad.check_value(-1) == False
-        assert cad.check_value(4) == False
 
 class TestCANAttribute(object):
     class CANTestAttributeDefinition(CANAttributeDefinition):
