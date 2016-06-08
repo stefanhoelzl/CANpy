@@ -9,14 +9,34 @@ from canpy.bit_array import BitArray
 class TestCANObject(object):
     def test_add_attribute(self):
         co = CANObject()
-        co.add_attribute(CANAttribute(CANAttributeDefinition('Attribute', CANObject)))
+        co.attributes.add(CANAttribute(CANAttributeDefinition('Attribute', CANObject)))
         assert 'Attribute' in co.attributes
+
+    def test_set_parent(self):
+        child_co = CANObject()
+        parent_co = CANObject()
+        child_co.parent = parent_co
+        assert parent_co.parent == None
+        assert child_co.parent == parent_co
+
+    def test_inherit_default_attr_values(self):
+        cn = CANNetwork()
+        cad = CANIntAttributeDefinition('CANIntAttributeDefinition', CANObject, 0, 0)
+        cad.default = 100
+        cn.attributes.add_definition(cad)
+
+        co = CANObject()
+        cn.add_child(co)
+
+        assert co.attributes['CANIntAttributeDefinition'].value == 100
 
 class TestCANNetwork(object):
     def test_add_node(self):
         cn = CANNetwork()
-        cn.add_node(CANNode('TestNode'))
+        node = CANNode('TestNode')
+        cn.add_node(node)
         assert 'TestNode' in cn.nodes
+        assert node.parent == cn
 
     def test_get_node(self):
         cn = CANNetwork()
@@ -62,8 +82,8 @@ class TestCANNetwork(object):
     def test_add_attribute_definition(self):
         cb = CANNetwork()
         cad = CANAttributeDefinition('Test', CANSignal)
-        cb.add_attribute_definition(cad)
-        assert 'Test' in cb.attribute_definitions
+        cb.attributes.add_definition(cad)
+        assert 'Test' in cb.attributes.definitions
 
     def test_add_value_dict(self):
         cb = CANNetwork()
@@ -76,8 +96,10 @@ class TestCANNetwork(object):
 class TestCANNode(object):
     def test_add_message(self):
         node = CANNode('TestNode')
-        node.add_message(CANMessage(1, 'Name', 6))
+        msg = CANMessage(1, 'Name', 6)
+        node.add_message(msg)
         assert 1 in node.messages
+        assert msg.parent == node
 
     def test_set_message_sender(self):
         node = CANNode('TestNode')
@@ -94,8 +116,10 @@ class TestCANNode(object):
 class TestCANMessage(object):
     def test_add_signal(self):
         msg = CANMessage(1, 'Name', 8)
-        msg.add_signal(CANSignal('Signal', 0, 8))
+        sig = CANSignal('Signal', 0, 8)
+        msg.add_signal(sig)
         assert 'Signal' in msg.signals
+        assert sig.parent == msg
 
     def test_add_signal_with_message(self):
         sig = CANSignal('Signal', 0, 8)
@@ -222,6 +246,7 @@ class TestCANSignal(object):
         sig.raw_value = 1
         assert sig.value == sig.raw_value
 
+
 class TestCANAttributeDefinitions(object):
     class NoStr(object):
             def __str__(self):
@@ -270,8 +295,8 @@ class TestCANAttributeDefinitions(object):
 class TestCANAttribute(object):
     class CANTestAttributeDefinition(CANAttributeDefinition):
         def __init__(self, name, can_obj_type, check=True, default=None):
-            super().__init__(name, can_obj_type)
             self.check = check
+            super().__init__(name, can_obj_type)
             self._default = default
 
         def check_value(self, value):
@@ -299,3 +324,63 @@ class TestCANAttribute(object):
         with pytest.raises(AttributeError):
             ca.value = 10
         assert ca.value == 100
+
+
+class TestCANAttributesContainer(object):
+    def test_add_attributes(self):
+        co = CANObject()
+        cad = CANAttributeDefinition('Name', CANObject)
+        ca = CANAttribute(cad)
+
+        assert 'Name' not in co.attributes
+        with pytest.raises(KeyError):
+            co.attributes['Name']
+
+        co.attributes.add(ca)
+        assert len(co.attributes) == 1
+        assert 'Name' in co.attributes
+        assert co.attributes['Name'] == ca
+
+    def test_lookup_chain(self):
+        parent_co = CANObject()
+        co = CANObject()
+        parent_co.add_child(co)
+        with pytest.raises(KeyError):
+            co.attributes['Attribute']
+
+        parent_co.attributes.add_definition(CANStringAttributeDefinition('Attribute', CANObject,
+                                                                         default='DefaultParent'))
+        assert co.attributes['Attribute'].value == 'DefaultParent'
+
+        co.attributes.add_definition(CANStringAttributeDefinition('Attribute', CANObject, default='ObjectDefault'))
+        assert co.attributes['Attribute'].value == 'ObjectDefault'
+
+        co.attributes.add(CANAttribute(CANStringAttributeDefinition('Attribute', CANObject,
+                                                                    default='AttributeDefault')))
+        assert co.attributes['Attribute'].value == 'AttributeDefault'
+
+        co.attributes.add(CANAttribute(CANStringAttributeDefinition('Attribute', CANObject, default='AttributeDefault'),
+                                       value='AttributeValue'))
+        assert co.attributes['Attribute'].value == 'AttributeValue'
+
+    def test_check_default_attribute(self):
+        co = CANObject()
+        cad = CANAttributeDefinition('Name', CANObject)
+        co.attributes.add_definition(cad)
+        assert 'Name' not in co.attributes
+        cad.default = 100
+        assert 'Name' in co.attributes
+        assert co.attributes['Name'].value == 100
+
+    @pytest.mark.parametrize('attr_name, expected_attr_name, obj_type, def_ob_type, default', [
+        ('Name', 'ExcpectedName', CANObject, CANObject, 1),
+        ('Name', 'Name', CANObject, CANNetwork, 1),
+        ('Name', 'Name', CANObject, CANObject, None),
+    ])
+    def test_check_default_attribute_fail(self, attr_name, expected_attr_name, obj_type, def_ob_type, default):
+        co = obj_type()
+        cad = CANAttributeDefinition(attr_name, def_ob_type)
+        cad.default = default
+        co.attributes.add_definition(cad)
+        with pytest.raises(KeyError):
+            co.attributes[expected_attr_name]

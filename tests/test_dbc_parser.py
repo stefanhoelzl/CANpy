@@ -164,8 +164,8 @@ class TestDBCParsing(object):
     def test_parse_attribute_definition(self, line, obj_type_expected, def_name,  def_type_expected, check_config):
         parser = DBCParser()
         parser._parse_line(line)
-        assert def_name in parser._canbus.attribute_definitions
-        ad = parser._canbus.attribute_definitions[def_name]
+        assert def_name in parser._canbus.attributes.definitions
+        ad = parser._canbus.attributes.definitions[def_name]
         assert ad.obj_type == obj_type_expected
         assert def_type_expected == type(ad)
         assert check_config(ad)
@@ -180,7 +180,7 @@ class TestDBCParsing(object):
     ])
     def test_parse_attribute_default(self, line, default_value_expected, attr_definition):
         parser = DBCParser()
-        parser._canbus.add_attribute_definition(attr_definition)
+        parser._canbus.attributes.add_definition(attr_definition)
         parser._parse_line(line)
         attr_def = attr_definition
         assert attr_def.default == default_value_expected
@@ -197,7 +197,7 @@ class TestDBCParsing(object):
     ])
     def test_parse_attribute(self, line, expected_value, attr_definition, cfg_dict):
         parser = DBCParser()
-        parser._canbus.add_attribute_definition(attr_definition)
+        parser._canbus.attributes.add_definition(attr_definition)
 
         if attr_definition.obj_type == CANNetwork:
             can_object = parser._canbus

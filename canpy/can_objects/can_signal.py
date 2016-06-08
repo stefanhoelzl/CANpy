@@ -125,8 +125,5 @@ class CANSignal(CANObject):
         self._receiver.append(node)
 
     # Protocol definitions
-    def __str__(self, *args, **kwargs):
-        return 'CANSignal(Name: {}, Start: {}, Length: {})'.format(self.name, self.start_bit, self.length)
-
     def __int__(self):
         return self.raw_value

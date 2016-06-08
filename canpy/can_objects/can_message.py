@@ -37,6 +37,7 @@ class CANMessage(CANObject):
         """
         if signal.message:
             raise RuntimeError('Signal already belongs to message {}'.format(signal.message))
+        self.add_child(signal)
         self._signals[signal.name] = signal
 
     # Protocol definitions

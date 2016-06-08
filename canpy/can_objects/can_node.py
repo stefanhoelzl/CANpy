@@ -32,6 +32,7 @@ class CANNode(CANObject):
         if message.sender:
             raise RuntimeError('Message already belongs to node {}!'.format(message.sender))
 
+        self.add_child(message)
         message.sender = self
         self._messages[message.can_id] = message
 

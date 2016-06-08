@@ -207,7 +207,7 @@ class DBCParser(object):
             values = list(map(lambda val: val.replace('"', '').strip(), values))
             ad = CANEnumAttributeDefinition(reg.group('attr_name'), obj_type, values)
 
-        self._canbus.add_attribute_definition(ad)
+        self._canbus.attributes.add_definition(ad)
 
     def _parse_attribute_value(self, cad, attr_value_str):
         """Parses a attribute value string
@@ -231,7 +231,7 @@ class DBCParser(object):
         pattern = 'BA_DEF_DEF_\s+"(?P<attr_name>\S+)"\s+(?P<default>\S+)\s*;'
         reg = re.search(pattern, attr_default_str)
 
-        cad = self._canbus.attribute_definitions[reg.group('attr_name')]
+        cad = self._canbus.attributes.definitions[reg.group('attr_name')]
         default_value = self._parse_attribute_value(cad, reg.group('default'))
         cad.default = default_value
 
@@ -253,8 +253,8 @@ class DBCParser(object):
         elif reg.group('sig'):
             can_object = self._canbus.get_signal(int(reg.group('can_id')), reg.group('name'))
 
-        cad = self._canbus.attribute_definitions[reg.group('attr_name')]
-        can_object.add_attribute(CANAttribute(cad, value=self._parse_attribute_value(cad, reg.group('value'))))
+        cad = self._canbus.attributes.definitions[reg.group('attr_name')]
+        can_object.attributes.add(CANAttribute(cad, value=self._parse_attribute_value(cad, reg.group('value'))))
 
     def _parse_val_table_def(self, val_table_def_str):
         """Parses a val table definition string and updates the CANBus

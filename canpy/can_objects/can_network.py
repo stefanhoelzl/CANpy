@@ -1,15 +1,6 @@
 __author__ = "Stefan Hölzl"
 
-class CANObject(object):
-    """Provides basic functionality for CAN-Objects"""
-    @property
-    def attributes(self):
-        if not '_attributes' in self.__dict__:
-            self._attributes = {}
-        return self._attributes
-
-    def add_attribute(self, attribute):
-        self.attributes[attribute.name] = attribute
+from canpy.can_objects.can_object import CANObject
 
 
 class CANNetwork(CANObject):
@@ -17,7 +8,6 @@ class CANNetwork(CANObject):
     def __init__(self):
         """Initializes the object"""
         self._nodes = {}
-        self._attribute_definitions = {}
         self._value_dicts = {}
 
         self.version = ""
@@ -25,10 +15,6 @@ class CANNetwork(CANObject):
         self.speed = 100
 
     # Property definitions
-    @property
-    def attribute_definitions(self):
-        return self._attribute_definitions
-
     @property
     def nodes(self):
         return self._nodes
@@ -47,20 +33,13 @@ class CANNetwork(CANObject):
         """
         self._value_dicts[name] = value_dict
 
-    def add_attribute_definition(self, definition):
-        """Adds a new attribute definition to the can network
-
-        Args:
-            definition: attribute definitin to add
-        """
-        self._attribute_definitions[definition.name] = definition
-
     def add_node(self, node):
         """Adds a new Node to the CANDB
 
         Args:
             node: Node to add.
         """
+        self.add_child(node)
         self._nodes[node.name] = node
 
     def get_message(self, can_id):
@@ -92,7 +71,3 @@ class CANNetwork(CANObject):
         if len(signals) == 0:
             return None
         return signals[0]
-
-    # Protocol definitions
-    def __str__(self, *args, **kwargs):
-        return 'CANDB(Version: {}, Nodes: {}, Description: {})'.format(self.version, len(self.nodes), self.description)

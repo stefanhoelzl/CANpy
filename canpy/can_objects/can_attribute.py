@@ -1,5 +1,61 @@
 __author__ = "Stefan Hölzl"
 
+class CANAttributesContainer(object):
+    def __init__(self, can_object):
+        self._can_object = can_object
+        self._attributes = {}
+        self._definitions = {}
+
+    # Property definitions
+    @property
+    def definitions(self):
+        return self._definitions
+
+    # Methods definitions
+    def _check_attribute_for_default_value(self, attribute_name, object_to_check=None):
+        if not object_to_check:
+            object_to_check = self._can_object
+        if (attribute_name in object_to_check.attributes.definitions
+            and object_to_check.attributes.definitions[attribute_name].obj_type == type(self._can_object)
+            and object_to_check.attributes.definitions[attribute_name].default):
+            default = CANAttribute(object_to_check.attributes.definitions[attribute_name],
+                                   value=object_to_check.attributes.definitions[attribute_name].default)
+            return default
+        raise KeyError('No default definition for this attribute')
+
+    def add(self, attribute):
+        self._attributes[attribute.name] = attribute
+
+    def add_definition(self, definition):
+        """Adds a new attribute definition to the can network
+
+        Args:
+            definition: attribute definitin to add
+        """
+        self._definitions[definition.name] = definition
+
+    # Protocol definitions
+    def __len__(self):
+        return len(self._attributes)
+
+    def __getitem__(self, item):
+        lookup_chain = []
+        lookup_chain.append(lambda: self._attributes[item])
+        lookup_chain.append(lambda: self._check_attribute_for_default_value(item))
+        lookup_chain.append(lambda: self._check_attribute_for_default_value(item, self._can_object.parent))
+        for look_up_item in lookup_chain:
+            try:
+                return look_up_item()
+            except:
+                pass
+        raise KeyError('No attribute available')
+
+    def __contains__(self, item):
+        try:
+            self[item]
+            return True
+        except:
+            return False
 
 class CANAttribute(object):
     def __init__(self, definition, value=None):
@@ -46,10 +102,10 @@ class CANAttribute(object):
 
 
 class CANAttributeDefinition(object):
-    def __init__(self, name, can_obj_type):
+    def __init__(self, name, can_obj_type, default=None):
         self.name = name
         self.obj_type = can_obj_type
-        self._default = None
+        self.default = default
 
     @property
     def default(self):
@@ -59,6 +115,8 @@ class CANAttributeDefinition(object):
     def default(self, value):
         if self.check_value(value):
             self._default = self.cast(value)
+        else:
+            self._default = None
 
     def check_value(self, value):
         return True
