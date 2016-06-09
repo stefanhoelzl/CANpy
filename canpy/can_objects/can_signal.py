@@ -46,6 +46,10 @@ class CANSignal(CANObject):
 
     # Property definitions
     @property
+    def last_bit(self):
+        return self.start_bit + self.length - 1
+
+    @property
     def receiver(self):
         return self._receiver
 

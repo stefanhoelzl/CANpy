@@ -143,7 +143,7 @@ class TestCANMessage(object):
         assert int(msg) == 100
 
     def test_int_splitted(self):
-        msg = CANMessage(1, 'Name', 1)
+        msg = CANMessage(1, 'Name', 2)
         sig = CANSignal('Signal', 4, 8)
         sig.raw_value = 100
         msg.add_signal(sig)
@@ -158,6 +158,52 @@ class TestCANMessage(object):
         sig1.raw_value = 96
         msg.add_signal(sig1)
         assert int(msg) == int(sig0.bits) + (int(sig1.bits) << 8)
+
+    @pytest.mark.parametrize('msg_size, new_sig_def, existing_sigs_def, expected_result', [
+        (1, (0, 8, False, None), [], True),
+        (1, (0, 4, False, None), [(4, 4, False, None)], True),
+        (1, (4, 4, False, None), [(0, 4, False, None)], True),
+        (2, (4, 4, False, 1), [(8, 8, True, None), (0, 5, False, 2)], True),
+        (1, (4, 5, False, None), [], False),
+        (1, (4, 4, False, None), [(0, 5, False, None)], False),
+        (1, (0, 5, False, None), [(4, 4, False, None)], False),
+        (1, (0, 8, False, None), [(2, 2, False, None)], False),
+        (1, (2, 2, False, None), [(0, 8, False, None)], False),
+        (1, (2, 2, False, None), [(2, 2, False, None)], False),
+        (2, (2, 2, False, None), [(8, 8, True, None), (2, 2, False, 1)], False),
+        (2, (2, 2, False, 1), [(8, 8, True, None), (2, 2, False, None)], False),
+        (2, (2, 2, False, 1), [(8, 8, True, None), (2, 2, False, 1)], False),
+    ])
+    def test_signal_fit_check(self, msg_size, new_sig_def, existing_sigs_def, expected_result):
+        msg = CANMessage(1, 'Message', msg_size)
+        for i, sig_def in enumerate(existing_sigs_def):
+            msg.add_signal(CANSignal('Signal{}'.format(i), sig_def[0], sig_def[1],
+                                     is_multiplexer=sig_def[2], multiplexer_id=sig_def[3]))
+        assert msg._check_if_signal_fits(CANSignal('NewSignal', new_sig_def[0], new_sig_def[1],
+                                                   is_multiplexer=new_sig_def[2], multiplexer_id=new_sig_def[3])
+                                         ) == expected_result
+
+    def test_signal_fit_check_fail(self):
+        msg = CANMessage(1, 'Message', 1)
+        with pytest.raises(RuntimeError):
+            msg.add_signal(CANSignal('Signal', 0, 10))
+
+    @pytest.mark.parametrize('old_sig_is_m, old_sig_m_id, new_sig_is_m, new_sig_m_id, expected_result', [
+        (False, None, False, 1, False),
+        (True, None, True, None, False),
+        (True, None, False, 1, True),
+    ])
+    def test_signal_multiplexer_settings_check(self, old_sig_is_m, old_sig_m_id, new_sig_is_m, new_sig_m_id, expected_result):
+        msg = CANMessage(1, 'Message', 2)
+        msg.add_signal(CANSignal('OldSignal', 0, 8, multiplexer_id=old_sig_m_id, is_multiplexer=old_sig_is_m))
+        assert msg._check_if_multiplexer_settings_are_valid(CANSignal('OldSignal', 0, 8,multiplexer_id=new_sig_m_id,
+                                                                      is_multiplexer=new_sig_is_m)) == expected_result
+
+    def test_signal_multiplexer_settings_check_fail(self):
+        msg = CANMessage(1, 'Message', 1)
+        with pytest.raises(RuntimeError):
+            msg.add_signal(CANSignal('Signal', 0, 8, multiplexer_id=1))
+
 
 class TestCANSignal(object):
     def test_add_receiver(self):

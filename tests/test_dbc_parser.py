@@ -47,25 +47,27 @@ class TestDBCParsing(object):
     testset_signal_multiplexed = ['SG_ Signal1  m34  :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2']
 
     @pytest.mark.parametrize('line, signal_name, start_bit, length, little_endian, signed, factor, offset, value_min,'\
-                             'value_max, unit, is_multiplexer, multiplexer_id, nodes', [
+                             'value_max, unit, is_multiplexer, multiplexer_id, nodes, add_multiplexer', [
         ('SG_     Signal1     :    32|32@1+   (   33.3     ,  0    )  [0|100]     "%"     Node1   Node2',
-            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, None, ['Node1', 'Node2']),
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, None, ['Node1', 'Node2'], False),
         ('SG_ Signal1:32|32@1+ (33.3,0) [ 0 | 100  ] "%" Node1 Node2',
-            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, None, ['Node1', 'Node2']),
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, None, ['Node1', 'Node2'], False),
         ('SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node0',
-            'Signal0', 0, 32, True, True, 1, 0, 0, 0, '', False, None, ['Node0']),
+            'Signal0', 0, 32, True, True, 1, 0, 0, 0, '', False, None, ['Node0'], False),
         ('SG_ Signal1  m34  :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2',
-            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, 34, ['Node1', 'Node2']),
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', False, 34, ['Node1', 'Node2'], True),
         ('SG_ Signal1  M   :32|32@1+ (33.3,0)[0|100] "%" Node1 Node2',
-            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', True, None, ['Node1', 'Node2']),
+            'Signal1', 32, 32, True, False, 33.3, 0, 0, 100, '%', True, None, ['Node1', 'Node2'], False),
     ])
     def test_parse_signal(self, line, signal_name, start_bit, length, little_endian, signed, factor, offset, value_min,\
-                          value_max, unit, is_multiplexer, multiplexer_id, nodes):
+                          value_max, unit, is_multiplexer, multiplexer_id, nodes, add_multiplexer):
         parser = DBCParser()
         parser._can_network.add_node(CANNode('Sender'))
         for node in nodes:
             parser._can_network.add_node(CANNode(node))
-        msg = CANMessage(1, 'CANMessage', 8)
+        msg = CANMessage(2, 'CANMessage', 8)
+        if add_multiplexer:
+            msg.add_signal(CANSignal('MultiplexerSignal', 8, 8, is_multiplexer=True))
         parser._can_network.nodes['Sender'].add_message(msg)
         parser._mode = ('MESSAGE', msg)
         parser._parse_line(line)
