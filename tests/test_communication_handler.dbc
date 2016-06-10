@@ -1,0 +1,30 @@
+VERSION "1.0"
+
+BU_: Node0 Node1
+
+BS_: 500
+
+BO_ 0 CANMessage0: 8 Node0
+    SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1
+    SG_ Signal1 : 32|32@1+ (100,0) [0|100] "%" Node1
+
+BO_ 1 CANMessage1: 8 Node0
+    SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1
+    SG_ Signal1 : 32|32@1+ (100,0) [0|100] "%" Node1
+
+BO_ 2 CANMessage2: 8 Node0
+    SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1
+    SG_ Signal1 : 32|32@1+ (100,0) [0|100] "%" Node1
+
+BO_ 3 CANMessage3: 8 Node0
+    SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1
+    SG_ Signal1 : 32|32@1+ (100,0) [0|100] "%" Node1
+
+BA_ "GenMsgSendType" BO_ 0 CANMessage0 0;
+BA_ "GenMsgCycleTime" BO_ 0 CANMessage0 10;
+
+BA_ "GenMsgSendType" BO_ 1 CANMessage1 4;
+BA_ "GenMsgCycleTime" BO_ 1 CANMessage1 100;
+
+BA_ "GenMsgSendType" BO_ 3 CANMessage3 4;
+BA_ "GenMsgCycleTime" BO_ 3 CANMessage3 100;

@@ -87,17 +87,27 @@ class TestCANNetwork(object):
         assert cn.get_signal(can_id=1234, name='Signal') == None
 
     def test_add_attribute_definition(self):
-        cb = CANNetwork()
+        cn = CANNetwork()
         cad = CANAttributeDefinition('Test', CANSignal)
-        cb.attributes.add_definition(cad)
-        assert 'Test' in cb.attributes.definitions
+        cn.attributes.add_definition(cad)
+        assert 'Test' in cn.attributes.definitions
 
     def test_add_value_dict(self):
-        cb = CANNetwork()
+        cn = CANNetwork()
         value_dict = {0: 'Val0'}
-        cb.add_value_dict('ValueDict', value_dict)
-        assert len(cb.value_dicts) == 1
-        assert 'ValueDict' in cb.value_dicts
+        cn.add_value_dict('ValueDict', value_dict)
+        assert len(cn.value_dicts) == 1
+        assert 'ValueDict' in cn.value_dicts
+
+    def test_get_consumed_messages(self):
+        cn = CANNetwork()
+        cn.add_node(CANNode('SendingNode'))
+        cn.add_node(CANNode('ReceivingNode'))
+        cn.nodes['SendingNode'].add_message(CANMessage(1, 'Message', 1))
+        sig = CANSignal('Signal', 0, 8)
+        sig.add_receiver(cn.nodes['ReceivingNode'])
+        cn.nodes['SendingNode'].messages[1].add_signal(sig)
+        assert cn.nodes['SendingNode'].messages[1] in cn.get_consumed_messages(cn.nodes['ReceivingNode'])
 
 
 class TestCANNode(object):
@@ -336,9 +346,13 @@ class TestCANAttributeDefinitions(object):
         (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
             'EnumAttribute', 3, True),
         (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', 'Val0', True),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
             'EnumAttribute', -1, False),
         (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
             'EnumAttribute', 4, False),
+        (CANEnumAttributeDefinition('EnumAttribute', CANObject, ['Val0', 'Val1', 'Val2', 'Val3']),
+            'EnumAttribute', 'Val4', False),
     ])
     def test_check(self, attr_definition, expected_name, test_value, expected_result):
         assert attr_definition.name == expected_name
@@ -395,11 +409,17 @@ class TestCANAttributesContainer(object):
         assert co.attributes['Name'] == ca
 
     def test_lookup_chain(self):
+        grandparent_co = CANObject()
         parent_co = CANObject()
         co = CANObject()
+        grandparent_co.add_child(parent_co)
         parent_co.add_child(co)
         with pytest.raises(KeyError):
             co.attributes['Attribute']
+
+        grandparent_co.attributes.add_definition(CANStringAttributeDefinition('Attribute', CANObject,
+                                                                         default='GrandParentDefault'))
+        assert co.attributes['Attribute'].value == 'GrandParentDefault'
 
         parent_co.attributes.add_definition(CANStringAttributeDefinition('Attribute', CANObject,
                                                                          default='DefaultParent'))

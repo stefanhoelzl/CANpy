@@ -20,6 +20,7 @@ class CANMessage(CANObject):
         self.can_id = can_id
         self.name = name
         self.length = length
+        self.is_active = True
 
         self.sender = None
 

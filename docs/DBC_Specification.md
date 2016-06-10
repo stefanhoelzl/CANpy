@@ -81,7 +81,7 @@ Supported types:
 * none  
 Definition: `BA_DEF BO_ "GenMsgSendType" ENUM "cyclic","triggered","cyclicIfActive","cyclicAndTriggered","cyclicIfActiveAndTriggered","none"`  
 Default: none
-Definition: `BA_DEF_DEF "GenMsgCycleTime" "none"`
+Definition: `BA_DEF_DEF "GenMsgSendType" "none"`
 
 ### GenMsgCycleTime
 Defines the cycle time of a message in ms.  

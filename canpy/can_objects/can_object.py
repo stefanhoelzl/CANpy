@@ -36,6 +36,9 @@ class CANNone(CANObject):
         pass
 
     # Protoclol definitions
+    def __bool__(self):
+        return False
+
     def __eq__(self, other):
         if other is None:
             return True

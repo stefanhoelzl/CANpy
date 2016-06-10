@@ -88,3 +88,16 @@ class CANNetwork(CANObject):
         if len(signals) == 0:
             return None
         return signals[0]
+
+    def get_consumed_messages(self, node):
+        """Returns a list with all messages which contains a signals which is consumed by the given node
+
+        Args:
+            node: Node for which you want the messages
+        Returns:
+            List of consumed messages
+        """
+        return [msg for n in self.nodes.values()
+                        for msg in n.messages.values()
+                            for sig in msg.signals.values()
+                                if node in sig.receiver]

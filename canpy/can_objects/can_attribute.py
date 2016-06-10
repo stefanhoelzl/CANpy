@@ -24,6 +24,8 @@ class CANAttributesContainer(object):
             default = CANAttribute(object_to_check.attributes.definitions[attribute_name],
                                    value=object_to_check.attributes.definitions[attribute_name].default)
             return default
+        if object_to_check.parent:
+            return self._check_attribute_for_default_value(attribute_name, object_to_check.parent)
         raise KeyError('No default definition for this attribute')
 
     def add(self, attribute):
@@ -44,7 +46,7 @@ class CANAttributesContainer(object):
     def __getitem__(self, item):
         lookup_chain = [lambda: self._attributes[item],
                         lambda: self._check_attribute_for_default_value(item),
-                        lambda: self._check_attribute_for_default_value(item, self._can_object.parent)]
+                       ]
         for look_up_item in lookup_chain:
             try:
                 return look_up_item()
@@ -152,10 +154,16 @@ class CANEnumAttributeDefinition(CANAttributeDefinition):
             return True
 
     def cast(self, value):
-        value = int(value)
-        if value < 0:
-            raise AttributeError('Negative enum index not allowed')
-        return self.values[value]
+        try:
+            value = int(value)
+            if value < 0:
+                raise IndexError('Negative enum index not allowed')
+            return self.values[value]
+        except ValueError:
+            value = str(value)
+            if value in self.values:
+                return value
+            raise AttributeError('Value not in enum')
 
 
 class CANFloatAttributeDefinition(CANAttributeDefinition):
