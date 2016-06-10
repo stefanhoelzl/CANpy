@@ -140,8 +140,8 @@ class CANStringAttributeDefinition(CANAttributeDefinition):
 
 class CANEnumAttributeDefinition(CANAttributeDefinition):
     def __init__(self, name, can_obj_type, values, default=None):
-        super().__init__(name, can_obj_type, default)
         self.values = values
+        super().__init__(name, can_obj_type, default)
 
     def check_value(self, value):
         try:
@@ -160,9 +160,9 @@ class CANEnumAttributeDefinition(CANAttributeDefinition):
 
 class CANFloatAttributeDefinition(CANAttributeDefinition):
     def __init__(self, name, can_obj_type, value_min, value_max, default=None):
-        super().__init__(name, can_obj_type, default)
         self.value_min = value_min
         self.value_max = value_max
+        super().__init__(name, can_obj_type, default)
 
     def check_value(self, value):
         try:

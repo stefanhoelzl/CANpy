@@ -1,11 +1,24 @@
 __author__ = "Stefan Hölzl"
 __all__ = ['CANNetwork']
 
-from canpy.can_objects.can_object import CANObject
+from canpy.can_objects import CANObject
+from canpy.can_objects.can_signal import CANSignal
+from canpy.can_objects.can_message import CANMessage
+from canpy.can_objects.can_attribute import CANEnumAttributeDefinition, CANIntAttributeDefinition
 
 
 class CANNetwork(CANObject):
     """Representation of a CAN-Network"""
+    default_attribute_definitions = [
+        CANEnumAttributeDefinition('GenMsgSendType', CANMessage, ['cyclic', 'triggered', 'cyclicIfActive',
+                                                                  'cyclicAndTriggered', 'cyclicIfActiveAndTriggered',
+                                                                  'none'], default=5),
+        CANIntAttributeDefinition('GenMsgCycleTime', CANMessage, 0, 0, default=0),
+        CANIntAttributeDefinition('GenMsgStartDelayTime', CANMessage, 0, 0, default=0),
+        CANIntAttributeDefinition('GenMsgDelayTime', CANMessage, 0, 0, default=0),
+        CANIntAttributeDefinition('GenSigStartValue', CANSignal, 0, 0, default=0),
+    ]
+
     def __init__(self):
         """Initializes the object"""
         super().__init__()
@@ -14,6 +27,9 @@ class CANNetwork(CANObject):
 
         self.version = ""
         self.speed = 100
+
+        for attr_def in CANNetwork.default_attribute_definitions:
+            self.attributes.add_definition(attr_def)
 
     # Property definitions
     @property
