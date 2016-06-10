@@ -1,4 +1,6 @@
 __author__ = "Stefan Hölzl"
+__all__ = ['BitArray']
+
 
 class BitArray(object):
     """Representation of a number as list of bits"""
@@ -48,10 +50,10 @@ class BitArray(object):
     def __len__(self):
         return len(self._list)
 
-    def __str__(self, *args, **kwargs):
+    def __str__(self):
         return ''.join(map(str, map(int, self._list)))
 
-    def __int__(self, *args, **kwargs):
+    def __int__(self):
         bits = self._list
         negative = False
         value = 0

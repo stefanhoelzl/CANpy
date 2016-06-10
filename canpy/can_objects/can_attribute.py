@@ -1,4 +1,7 @@
 __author__ = "Stefan Hölzl"
+__all__ = ['CANAttributesContainer', 'CANAttribute', 'CANStringAttributeDefinition', 'CANIntAttributeDefinition',
+           'CANFloatAttributeDefinition', 'CANEnumAttributeDefinition']
+
 
 class CANAttributesContainer(object):
     def __init__(self, can_object):
@@ -39,10 +42,9 @@ class CANAttributesContainer(object):
         return len(self._attributes)
 
     def __getitem__(self, item):
-        lookup_chain = []
-        lookup_chain.append(lambda: self._attributes[item])
-        lookup_chain.append(lambda: self._check_attribute_for_default_value(item))
-        lookup_chain.append(lambda: self._check_attribute_for_default_value(item, self._can_object.parent))
+        lookup_chain = [lambda: self._attributes[item],
+                        lambda: self._check_attribute_for_default_value(item),
+                        lambda: self._check_attribute_for_default_value(item, self._can_object.parent)]
         for look_up_item in lookup_chain:
             try:
                 return look_up_item()
@@ -143,10 +145,10 @@ class CANEnumAttributeDefinition(CANAttributeDefinition):
 
     def check_value(self, value):
         try:
-            value = self.cast(value)
+            value_str = self.cast(value)
         except:
             return False
-        if value in self.values:
+        if value_str in self.values:
             return True
 
     def cast(self, value):

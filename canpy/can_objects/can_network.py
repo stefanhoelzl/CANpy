@@ -1,4 +1,5 @@
 __author__ = "Stefan Hölzl"
+__all__ = ['CANNetwork']
 
 from canpy.can_objects.can_object import CANObject
 
@@ -7,11 +8,11 @@ class CANNetwork(CANObject):
     """Representation of a CAN-Network"""
     def __init__(self):
         """Initializes the object"""
+        super().__init__()
         self._nodes = {}
         self._value_dicts = {}
 
         self.version = ""
-        self.description = ""
         self.speed = 100
 
     # Property definitions

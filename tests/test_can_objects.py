@@ -2,8 +2,10 @@ __author__ = "Stefan Hölzl"
 
 import pytest
 
-from canpy.can_objects import CANNetwork, CANMessage, CANNode, CANSignal, CANObject
+from canpy.can_objects import CANNetwork, CANMessage, CANNode, CANSignal
+from canpy.can_objects.can_object import CANNone, CANObject
 from canpy.can_objects.can_attribute import *
+from canpy.can_objects.can_attribute import CANAttributeDefinition
 from canpy.bit_array import BitArray
 
 class TestCANObject(object):
@@ -29,6 +31,11 @@ class TestCANObject(object):
         cn.add_child(co)
 
         assert co.attributes['CANIntAttributeDefinition'].value == 100
+
+    def test_cannone_is_none(self):
+        assert CANNone() == None
+        assert CANNone() != True
+
 
 class TestCANNetwork(object):
     def test_add_node(self):

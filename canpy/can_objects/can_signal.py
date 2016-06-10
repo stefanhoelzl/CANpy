@@ -1,7 +1,8 @@
 __author__ = "Stefan Hölzl"
+__all__ = ['CANSignal']
 
 from canpy.bit_array import BitArray
-from canpy.can_objects.can_network import CANObject
+from canpy.can_objects.can_object import CANObject
 
 class CANSignal(CANObject):
     """Represents a CAN-Signal"""
@@ -23,6 +24,7 @@ class CANSignal(CANObject):
             is_multiplexer: True if message is a multiplexer (default: False)
             multiplexer_id: Multiplexer ID if this message is multiplexed (default: None)
         """
+        super().__init__()
         self._receiver = []
         self._raw_value = 0
 
@@ -40,7 +42,6 @@ class CANSignal(CANObject):
         self.multiplexer_id = multiplexer_id
 
         self.message = None
-        self.description = ""
         self.value_dict = None
 
     # Property definitions
@@ -96,7 +97,7 @@ class CANSignal(CANObject):
         if self.value_min != 0 and self.value_max != 0:
             value = max(value, self.value_min)
             value = min(value, self.value_max)
-        self.raw_value = int( (value-self.offset)/self.factor )
+        self.raw_value = int((value-self.offset)/self.factor)
 
     @property
     def bits(self):

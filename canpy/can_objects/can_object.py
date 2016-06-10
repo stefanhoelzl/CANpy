@@ -1,32 +1,26 @@
 __author__ = "Stefan Hölzl"
+__all__ = ['CANObject', 'CANNone']
 
 from canpy.can_objects.can_attribute import CANAttributesContainer
 
-class CANNone(object):
-    # Protoclol definitions
-    def __eq__(self, other):
-        if other == None:
-            return True
-        return super().__eq__(other)
 
-class CANObject(CANNone):
+class CANObject(object):
     """Provides basic functionality for CAN-Objects"""
+    def __init__(self):
+        self._parent = CANNone()
+        self._attributes = CANAttributesContainer(self)
+        self.description = ""
+
     @property
     def parent(self):
-        if '_parent' not in self.__dict__:
-            self._parent = CANNone()
         return self._parent
 
     @parent.setter
     def parent(self, value):
-        if '_parent' not in self.__dict__:
-            self._parent = None
         self._parent = value
 
     @property
     def attributes(self):
-        if '_attributes' not in self.__dict__:
-            self._attributes = CANAttributesContainer(self)
         return self._attributes
 
     def add_child(self, child):
@@ -34,6 +28,15 @@ class CANObject(CANNone):
 
     # Protocol definitions
     def __eq__(self, other):
-        if other == None:
-            return False
+        return super().__eq__(other)
+
+
+class CANNone(CANObject):
+    def __init__(self):
+        pass
+
+    # Protoclol definitions
+    def __eq__(self, other):
+        if other is None:
+            return True
         return super().__eq__(other)

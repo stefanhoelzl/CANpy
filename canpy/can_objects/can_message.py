@@ -1,6 +1,8 @@
 __author__ = "Stefan Hölzl"
+__all__ = ['CANMessage']
 
-from canpy.can_objects.can_network import CANObject
+from canpy.can_objects.can_object import CANObject
+
 
 class CANMessage(CANObject):
     """Represents a CAN-Message"""
@@ -12,13 +14,13 @@ class CANMessage(CANObject):
             name:   Name of the message.
             length: Message length in bytes
         """
+        super().__init__()
         self._signals = {}
 
         self.can_id = can_id
         self.name = name
         self.length = length
 
-        self.description = ""
         self.sender = None
 
     # Property definitions
@@ -41,7 +43,7 @@ class CANMessage(CANObject):
         self._signals[signal.name] = signal
 
     # Protocol definitions
-    def __str__(self, *args, **kwargs):
+    def __str__(self):
         return 'CANMessage(CAN-ID: {}, Name: {}, Length: {})'.format(self.can_id, self.name, self.length)
 
     def __int__(self):
