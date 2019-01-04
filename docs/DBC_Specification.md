@@ -1,5 +1,4 @@
 # Scope
-This document specifies how DBC files are handled by [CANpy](https://github.com/stefanhoelzl/CANpy)  
 This document doesn't claim to specifiy the complete [Vector DBC standard](http://vector.com/vi_candb_en.html)  
 
 # Format description
