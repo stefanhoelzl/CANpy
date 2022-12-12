@@ -47,3 +47,15 @@ BO_ 1234 CANMessage: 8 Node0
  SG_ Signal1 : 32|32@1+ (100,0) [0|100] "%"  Node1,Node2
  SG_ Signal0 : 0|32@1- (1,0) [0|0] ""  Node1,Node2
 
+
+
+EV_ UnrestrictedEnvVar: 0 [0|0] "Nm" 0 1 DUMMY_NODE_VECTOR8000  Node0;
+
+EV_ RWEnvVar_wData: 0 [0|1234] "" 60 2 DUMMY_NODE_VECTOR3  Node2;
+
+EV_ WriteOnlyEnvVar: 1 [0|1234] "" 60 3 DUMMY_NODE_VECTOR2  Node2;
+
+EV_ ReadOnlyEnvVar: 0 [0|100] "MPH" 20 4 DUMMY_NODE_VECTOR1  Node2;
+ENVVAR_DATA_ RWEnvVar_wData: 10;
+
+
