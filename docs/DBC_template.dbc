@@ -53,10 +53,10 @@ BA_DEF_ BO_ "BOStringAttribute" STRING;
 BA_DEF_ BU_ "BUIntAttribute" INT 0 100;
 BA_DEF_ SG_ "SGEnumAttribute" ENUM "Val0", "Val1", "Val2";
 
-BA_DEF_DEF "FloatAttribute" 25.25;
-BA_DEF_DEF "BOStringAttribute" "String";
-BA_DEF_DEF "BUIntAttribute" 50;
-BA_DEF_DEF "SGEnumAttribute" 1;
+BA_DEF_DEF_ "FloatAttribute" 25.25;
+BA_DEF_DEF_ "BOStringAttribute" "String";
+BA_DEF_DEF_ "BUIntAttribute" 50;
+BA_DEF_DEF_ "SGEnumAttribute" 1;
 
 BA_ "FloatAttribute" 45.9;
 BA_ "BUIntAttribute" BU_ Node0 100;
