@@ -58,4 +58,12 @@ EV_ WriteOnlyEnvVar: 1 [0|1234] "" 60 3 DUMMY_NODE_VECTOR2  Node2;
 EV_ ReadOnlyEnvVar: 0 [0|100] "MPH" 20 4 DUMMY_NODE_VECTOR1  Node2;
 ENVVAR_DATA_ RWEnvVar_wData: 10;
 
+CM_ "DBC Template with single line description";
+CM_ BU_ Node0 "The 0th Node";
+CM_ BO_ 2147487969 "Multiplexed CAN-Message";
+CM_ SG_ 1234 Signal0 "First signal in this message";
+CM_ EV_ RWEnvVar_wData "This a comment for an environment variable";
+CM_ EV_ WriteOnlyEnvVar "This a comment for an environment variable";
+CM_ EV_ ReadOnlyEnvVar "This a comment for an environment variable";
+
 
