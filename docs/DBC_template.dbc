@@ -30,9 +30,9 @@ NS_:
 	BU_BO_REL_
 	SG_MUL_VAL_
 
-BU_: Node0 Node1 Node2
+BS_:
 
-BS_: 500
+BU_: Node0 Node1 Node2
 
 BO_ 1234 CANMessage: 8 Node0
     SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1 Node2
