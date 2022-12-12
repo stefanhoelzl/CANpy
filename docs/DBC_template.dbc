@@ -66,4 +66,30 @@ CM_ EV_ RWEnvVar_wData "This a comment for an environment variable";
 CM_ EV_ WriteOnlyEnvVar "This a comment for an environment variable";
 CM_ EV_ ReadOnlyEnvVar "This a comment for an environment variable";
 
+BA_DEF_ EV_  "RWEnvVar_wData_Val" INT 0 10;
+BA_DEF_ EV_  "GlobalEnvVar_Val" HEX 256 320;
+BA_DEF_ SG_  "SGEnumAttribute" ENUM  "Val0","Val1","Val2";
+BA_DEF_ BU_  "BUIntAttribute" INT 0 100;
+BA_DEF_ BO_  "BOStringAttribute" STRING ;
+BA_DEF_  "FloatAttribute" FLOAT 0 50.5;
+BA_DEF_REL_ BU_EV_REL_  "ControlUnitEnvVarAttr" STRING ;
+BA_DEF_DEF_REL_ "ControlUnitEnvVarAttr" "MyVar";
+BA_DEF_DEF_  "RWEnvVar_wData_Val" 5;
+BA_DEF_DEF_  "GlobalEnvVar_Val" 288;
+BA_DEF_DEF_  "SGEnumAttribute" "Val0";
+BA_DEF_DEF_  "BUIntAttribute" 50;
+BA_DEF_DEF_  "BOStringAttribute" "String";
+BA_DEF_DEF_  "FloatAttribute" 25.25;
+
+BA_ "FloatAttribute" 45.9;
+BA_ "BUIntAttribute" BU_ Node0 100;
+BA_ "BOStringAttribute" BO_ 1234 "MessageAttribute";
+BA_ "SGEnumAttribute" SG_ 1234 Signal0 2;
+BA_ "RWEnvVar_wData_Val" EV_ RWEnvVar_wData 3;
+
+VAL_ 2147487969 Value1 3 "Three" 2 "Two" 1 "One" 0 "Zero" ;
+VAL_ 2147487969 Value0 2 "Value2" 1 "Value1" 0 "Value0" ;
+VAL_ RWEnvVar_wData 2 "Value2" 1 "Value1" 0 "Value0" ;
+VAL_ WriteOnlyEnvVar 2 "Value2" 1 "Value1" 0 "Value0" ;
+VAL_ ReadOnlyEnvVar 2 "Value2" 1 "Value1" 0 "Value0" ;
 
