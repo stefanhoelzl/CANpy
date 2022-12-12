@@ -32,11 +32,11 @@ NS_:
 
 BS_:
 
-BU_: Node0 Node1 Node2
+BU_: Engine Node0 Node1 Node2
 
 BO_ 1234 CANMessage: 8 Node0
-    SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1 Node2
-    SG_ Signal1 : 32|32@1+ (100,0) [0|100] "%" Node1 Node2
+    SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1
+    SG_ Signal1 : 32|32@1+ (100,0) [0|100] "%" Node1
 
 BO_ 4321 CANMultiplexed: 2 Node0
     SG_ Multiplexer M : 0|8@1+ (1,0) [0|0] "" Node1
