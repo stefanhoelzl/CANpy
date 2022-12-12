@@ -32,7 +32,9 @@ NS_:
 
 BS_:
 
-BU_: Engine Node0 Node1 Node2
+BU_: Node0 Node1 Node2
+VAL_TABLE_ Value0 2 "Value2" 1 "Value1" 0 "Value0" ;
+VAL_TABLE_ Numbers 3 "Three" 2 "Two" 1 "One" 0 "Zero" ;
 
 BO_ 1234 CANMessage: 8 Node0
     SG_ Signal0 : 0|32@1- (1,0) [0|0] "" Node1
@@ -63,8 +65,4 @@ BA_ "BUIntAttribute" BU_ Node0 100;
 BA_ "BOStringAttribute" BO_ 1234 "MessageAttribute";
 BA_ "SGEnumAttribute" SG_ 1234 Signal0 2;
 
-VAL_TABLE_ Numbers 3 "Three" 2 "Two" 1 "One" 0 "Zero";
-VAL_ 4321 Value0 2 "Value2" 1 "Value1" 0 "Value0";
-VAL_ 4321 Value1 Numbers;
-
-BO_TX_BU_ 4321 : Node0,Node2;
+VAL_ 1234 Signal0 3 "NO CHANGE" 2 "RESERVED" 1 "ON" 0 "OFF" ;
