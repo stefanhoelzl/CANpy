@@ -92,4 +92,3 @@ VAL_ 2147487969 Value0 2 "Value2" 1 "Value1" 0 "Value0" ;
 VAL_ RWEnvVar_wData 2 "Value2" 1 "Value1" 0 "Value0" ;
 VAL_ WriteOnlyEnvVar 2 "Value2" 1 "Value1" 0 "Value0" ;
 VAL_ ReadOnlyEnvVar 2 "Value2" 1 "Value1" 0 "Value0" ;
-
